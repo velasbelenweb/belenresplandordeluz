@@ -4,6 +4,7 @@ import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CinematicIntro from "@/components/CinematicIntro";
 
 export const metadata: Metadata = {
   title: "Belén Resplandor de Luz | Velas artesanales y artículos religiosos",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="font-body antialiased">
+        <CinematicIntro />
         <CartProvider>
           <Header />
           <main>{children}</main>

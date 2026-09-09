@@ -1,5 +1,6 @@
 import { categorias, getProductos, getProductosByCategoria } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
+import CinematicReveal from "@/components/CinematicReveal";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -43,8 +44,10 @@ export default async function CatalogoPage({
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {lista.map((p) => (
-          <ProductCard key={p.slug} product={p} />
+        {lista.map((p, i) => (
+          <CinematicReveal key={p.slug} variant="fade-up" delay={(i % 4) * 100}>
+            <ProductCard product={p} />
+          </CinematicReveal>
         ))}
       </div>
 

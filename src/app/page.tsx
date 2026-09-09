@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categorias, getDestacados } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
+import CinematicReveal from "@/components/CinematicReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -26,32 +27,48 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative flex min-h-[520px] items-center bg-ink">
+      {/* Hero cinematico: Ken Burns + barras estilo cine + texto escalonado */}
+      <section className="relative flex min-h-[560px] items-center overflow-hidden bg-ink">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/hero-velas.jpg"
           alt="Velas encendidas"
-          className="absolute inset-0 h-full w-full object-cover opacity-70"
+          className="absolute inset-0 h-full w-full animate-kenburns object-cover opacity-70"
         />
+        <div className="hero-vignette absolute inset-0" />
+
+        {/* Barras de letterbox */}
+        <div className="letterbox-bar top-0 animate-letterbox-in" />
+        <div className="letterbox-bar bottom-0 animate-letterbox-in" />
+
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-24 md:px-8">
-          <h1 className="font-display text-4xl font-bold text-white md:text-6xl">
-            Velas Aromatizadas
-          </h1>
-          <p className="mt-4 max-w-md border-t border-white/40 pt-4 text-white/90">
-            Ambiente sus espacios con las fragancias mas exclusivas
-          </p>
-          <Link
-            href="/catalogo"
-            className="btn-pill mt-8 border-white text-white hover:bg-white hover:text-ink"
-          >
-            Comprar Ahora
-          </Link>
+          <CinematicReveal variant="fade-up" delay={200}>
+            <h1 className="font-display text-4xl font-bold text-white md:text-6xl">
+              Velas Aromatizadas
+            </h1>
+          </CinematicReveal>
+          <CinematicReveal variant="fade-up" delay={450}>
+            <p className="mt-4 max-w-md border-t border-white/40 pt-4 text-white/90">
+              Ambiente sus espacios con las fragancias mas exclusivas
+            </p>
+          </CinematicReveal>
+          <CinematicReveal variant="fade-up" delay={700}>
+            <Link
+              href="/catalogo"
+              className="btn-pill mt-8 border-white text-white hover:bg-white hover:text-ink"
+            >
+              Comprar Ahora
+            </Link>
+          </CinematicReveal>
         </div>
       </section>
 
       {/* Destacado editorial */}
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-2 md:px-8">
+      <CinematicReveal
+        as="section"
+        variant="wipe-right"
+        className="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-2 md:px-8"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/productos/vela-acanalada.jpg"
@@ -73,38 +90,51 @@ export default async function HomePage() {
             Comprar Ahora
           </Link>
         </div>
-      </section>
+      </CinematicReveal>
 
       {/* Colecciones */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
+      <CinematicReveal
+        as="section"
+        variant="fade-up"
+        className="mx-auto max-w-7xl px-4 pb-16 md:px-8"
+      >
         <h2 className="mb-6 font-display text-3xl font-bold text-ink">
           Colecciones
         </h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {categorias.map((cat) => (
-            <Link
+          {categorias.map((cat, i) => (
+            <CinematicReveal
               key={cat.slug}
-              href={`/catalogo?categoria=${cat.slug}`}
-              className="overflow-hidden rounded-2xl border border-ink/15"
+              variant="scale-in"
+              delay={i * 120}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={cat.imagen}
-                alt={cat.nombre}
-                className="aspect-square w-full object-cover"
-              />
-              <div className="p-4">
-                <p className="font-display font-semibold text-ink">
-                  {cat.nombre} →
-                </p>
-              </div>
-            </Link>
+              <Link
+                href={`/catalogo?categoria=${cat.slug}`}
+                className="overflow-hidden rounded-2xl border border-ink/15"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cat.imagen}
+                  alt={cat.nombre}
+                  className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+                <div className="p-4">
+                  <p className="font-display font-semibold text-ink">
+                    {cat.nombre} →
+                  </p>
+                </div>
+              </Link>
+            </CinematicReveal>
           ))}
         </div>
-      </section>
+      </CinematicReveal>
 
       {/* Banner ancho */}
-      <section className="relative flex min-h-[420px] items-center justify-center bg-ink">
+      <CinematicReveal
+        as="section"
+        variant="curtain"
+        className="relative flex min-h-[420px] items-center justify-center overflow-hidden bg-ink"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/banner-velas.jpg"
@@ -122,6 +152,12 @@ export default async function HomePage() {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Link
+              href="/velas-liturgicas"
+              className="btn-pill border-ink/40 text-ink/70 hover:border-ink hover:text-ink"
+            >
+              Encuentra tu vela
+            </Link>
+            <Link
               href="/catalogo"
               className="btn-pill border-ink/40 text-ink/70 hover:border-ink hover:text-ink"
             >
@@ -135,22 +171,32 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </CinematicReveal>
 
       {/* Productos destacados */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
+      <CinematicReveal
+        as="section"
+        variant="fade-up"
+        className="mx-auto max-w-7xl px-4 py-16 md:px-8"
+      >
         <h2 className="mb-6 font-display text-3xl font-bold text-ink">
           Productos Destacados
         </h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {destacados.map((p) => (
-            <ProductCard key={p.slug} product={p} />
+          {destacados.map((p, i) => (
+            <CinematicReveal key={p.slug} variant="fade-up" delay={i * 100}>
+              <ProductCard product={p} />
+            </CinematicReveal>
           ))}
         </div>
-      </section>
+      </CinematicReveal>
 
       {/* Regalo */}
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 md:grid-cols-2 md:px-8">
+      <CinematicReveal
+        as="section"
+        variant="wipe-left"
+        className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 md:grid-cols-2 md:px-8"
+      >
         <div className="flex flex-col gap-4">
           <h2 className="font-display text-3xl font-bold text-ink">
             El regalo perfecto que todos quieren tener
@@ -173,48 +219,51 @@ export default async function HomePage() {
           alt="Vela envuelta como regalo"
           className="aspect-square w-full rounded-2xl object-cover"
         />
-      </section>
+      </CinematicReveal>
 
       {/* Blog */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
+      <CinematicReveal
+        as="section"
+        variant="fade-up"
+        className="mx-auto max-w-7xl px-4 pb-16 md:px-8"
+      >
         <h2 className="mb-6 font-display text-3xl font-bold text-ink">
           Artículos del blog
         </h2>
         <div className="grid gap-6 sm:grid-cols-2">
-          {articulosBlog.map((post) => (
-            <article
-              key={post.slug}
-              className="overflow-hidden rounded-2xl border border-ink/15"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.imagen}
-                alt={post.titulo}
-                className="aspect-[16/9] w-full object-cover"
-              />
-              <div className="p-5">
-                <h3 className="font-display font-semibold text-ink">
-                  {post.titulo}
-                </h3>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">
-                  {post.fecha}
-                </p>
-                <p className="mt-2 text-ink/70">{post.extracto}</p>
-              </div>
-            </article>
+          {articulosBlog.map((post, i) => (
+            <CinematicReveal key={post.slug} variant="scale-in" delay={i * 150}>
+              <article className="overflow-hidden rounded-2xl border border-ink/15">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.imagen}
+                  alt={post.titulo}
+                  className="aspect-[16/9] w-full object-cover"
+                />
+                <div className="p-5">
+                  <h3 className="font-display font-semibold text-ink">
+                    {post.titulo}
+                  </h3>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">
+                    {post.fecha}
+                  </p>
+                  <p className="mt-2 text-ink/70">{post.extracto}</p>
+                </div>
+              </article>
+            </CinematicReveal>
           ))}
         </div>
-      </section>
+      </CinematicReveal>
 
       {/* Formulario de contacto */}
-      <section className="bg-brand py-16">
+      <CinematicReveal as="section" variant="curtain" className="bg-brand py-16">
         <div className="mx-auto max-w-2xl px-4 text-center md:px-8">
           <h2 className="font-display text-3xl font-bold text-white">
             Formulario de contacto
           </h2>
           <ContactoFormInline />
         </div>
-      </section>
+      </CinematicReveal>
     </>
   );
 }

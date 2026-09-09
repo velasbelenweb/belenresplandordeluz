@@ -6,8 +6,9 @@ import { useCart } from "@/context/CartContext";
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/empresa", label: "Empresa" },
   { href: "/catalogo", label: "Catálogo" },
+  { href: "/velas-liturgicas", label: "Encuentra tu vela" },
+  { href: "/empresa", label: "Empresa" },
   { href: "/contacto", label: "Contacto" },
 ];
 

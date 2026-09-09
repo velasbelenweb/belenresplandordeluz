@@ -42,6 +42,20 @@ const config: Config = {
       borderRadius: {
         pill: "999px",
       },
+      keyframes: {
+        kenburns: {
+          "0%": { transform: "scale(1.12)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "letterbox-in": {
+          "0%": { transform: "scaleY(0)" },
+          "100%": { transform: "scaleY(1)" },
+        },
+      },
+      animation: {
+        kenburns: "kenburns 9s ease-out forwards",
+        "letterbox-in": "letterbox-in 900ms cubic-bezier(0.76,0,0.24,1) forwards",
+      },
     },
   },
   plugins: [],
