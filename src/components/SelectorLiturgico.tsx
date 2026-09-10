@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, X, ChevronRight, MessageCircle } from "lucide-react";
 
 /* ============================================================
@@ -22,6 +23,10 @@ type CatalogNode = {
   id: string;
   label: string;
   children?: CatalogNode[];
+  /** Si está presente, esta hoja es un producto real del catálogo con precio
+   * y compra en línea: en vez de la pantalla de "consultar por WhatsApp",
+   * se navega directo a su ficha de producto. */
+  productSlug?: string;
 };
 
 const sizes = (prefix: string, values: string[]): CatalogNode[] =>
@@ -38,11 +43,19 @@ const CATALOG_TREE: CatalogNode[] = [
         children: sizes("veladora-sr", ["Referencia 1", "Referencia 2", "Referencia 3", "Referencia 4"]),
       },
       {
-        id: "veladora-tradicional",
-        label: "Tradicional",
+        id: "veladora-no-1",
+        label: "Veladora No. 1",
         children: [
-          { id: "veladora-blanco", label: "Blanco" },
-          { id: "veladora-azul-clara", label: "Azul clara" },
+          { id: "veladora-no1-blanco", label: "Blanco", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-azul-marino", label: "Azul Marino", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-celeste", label: "Celeste", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-amarillo", label: "Amarillo", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-verde", label: "Verde", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-rojo", label: "Rojo", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-naranja", label: "Naranja", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-rosado", label: "Rosado", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-morado", label: "Morado", productSlug: "veladora-no-1" },
+          { id: "veladora-no1-negro", label: "Negro", productSlug: "veladora-no-1" },
         ],
       },
       {
@@ -236,6 +249,21 @@ const CATALOG_TREE: CatalogNode[] = [
 
 const ROOT: CatalogNode = { id: "root", label: "Catálogo", children: CATALOG_TREE };
 
+// Mismo mapa de colores usado en VariantSelector, para que las opciones de
+// color (ej. Veladora No. 1) se vean consistentes en todo el sitio.
+const COLOR_SWATCHES: Record<string, string> = {
+  blanco: "#FFFFFF",
+  "azul marino": "#1B2A6B",
+  celeste: "#7EC8E3",
+  amarillo: "#F2C230",
+  verde: "#1F5C3A",
+  rojo: "#C21F26",
+  naranja: "#E8731A",
+  rosado: "#F0A8C4",
+  morado: "#5B2A86",
+  negro: "#111111",
+};
+
 /* ============================================================
    HISTORIAL DE CONSULTAS RECIENTES (localStorage del navegador)
 ============================================================ */
@@ -297,6 +325,7 @@ function whatsappHref(labels: string[]) {
    COMPONENTE PRINCIPAL
 ============================================================ */
 export default function SelectorLiturgico() {
+  const router = useRouter();
   const [screen, setScreen] = useState<Screen>("landing");
   const [path, setPath] = useState<CatalogNode[]>([ROOT]);
   const [selection, setSelection] = useState<CatalogNode | null>(null);
@@ -336,6 +365,10 @@ export default function SelectorLiturgico() {
     (node: CatalogNode) => {
       if (node.children && node.children.length > 0) {
         setPath((p) => [...p, node]);
+        return;
+      }
+      if (node.productSlug) {
+        router.push(`/producto/${node.productSlug}`);
         return;
       }
       setSelection(node);
@@ -558,14 +591,32 @@ export default function SelectorLiturgico() {
             <h2 className="slv-qtitle slv-display">
               {path.length === 1 ? "¿Qué línea buscas?" : current.label}
             </h2>
-            {(current.children ?? []).map((node) => (
-              <button key={node.id} className="slv-option" onClick={() => selectNode(node)}>
-                {node.label}
-                {node.children && node.children.length > 0 && (
-                  <ChevronRight size={18} className="slv-chevron" />
-                )}
-              </button>
-            ))}
+            {(current.children ?? []).map((node) => {
+              const swatch = COLOR_SWATCHES[node.label.trim().toLowerCase()];
+              return (
+                <button key={node.id} className="slv-option" onClick={() => selectNode(node)}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    {swatch && (
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: "999px",
+                          background: swatch,
+                          border: "1px solid rgba(237,227,211,0.25)",
+                          flex: "none",
+                        }}
+                      />
+                    )}
+                    {node.label}
+                  </span>
+                  {node.children && node.children.length > 0 && (
+                    <ChevronRight size={18} className="slv-chevron" />
+                  )}
+                </button>
+              );
+            })}
           </Fade>
         )}
 
