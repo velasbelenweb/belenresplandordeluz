@@ -155,7 +155,7 @@ export default async function HomePage() {
               href="/velas-liturgicas"
               className="btn-pill border-ink/40 text-ink/70 hover:border-ink hover:text-ink"
             >
-              Encuentra tu vela
+              Explora nuestras líneas
             </Link>
             <Link
               href="/catalogo"

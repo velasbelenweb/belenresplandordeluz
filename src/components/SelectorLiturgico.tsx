@@ -2,255 +2,244 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ShoppingBag,
-  X,
-  Check,
-  Loader2,
-  MessageCircle,
-} from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { ArrowLeft, X, ChevronRight, MessageCircle } from "lucide-react";
 
 /* ============================================================
-   DATOS: árbol de decisión (ocasión -> intención -> producto)
+   ÁRBOL DE CATEGORÍAS
    ------------------------------------------------------------
-   En el futuro este árbol puede salir del catálogo real
-   (etiquetado por ocasión/intención en la base de datos). Por
-   ahora se modela como estructura estática para que el flujo
-   completo (pregunta -> recomendación -> carrito) sea 100%
-   funcional de punta a punta.
+   Refleja la hoja "Inventario de productos y artículos" del
+   negocio: Línea -> Categoría -> (Subcategoría) -> Referencia.
+   No incluye precios porque el inventario no los trae por
+   referencia (varían mucho, ej. Velón No. 5 vs No. 18) — la
+   cotización final se resuelve por WhatsApp.
+
+   TODO(negocio): si algún día quieren venta directa desde aquí
+   (sin pasar por WhatsApp), hay que mapear cada id de referencia
+   a un producto+precio real del catálogo y usar useCart().
 ============================================================ */
 
-type Intencion = {
+type CatalogNode = {
   id: string;
   label: string;
-  product: string;
-  symbol: string;
+  children?: CatalogNode[];
 };
 
-type Ocasion = {
-  id: string;
-  label: string;
-  hex: string;
-  intentions: Intencion[];
-};
+const sizes = (prefix: string, values: string[]): CatalogNode[] =>
+  values.map((v) => ({ id: `${prefix}-${v}`, label: v }));
 
-const OCCASIONS: Ocasion[] = [
+const CATALOG_TREE: CatalogNode[] = [
   {
-    id: "difuntos",
-    label: "Por el descanso de un difunto",
-    hex: "#6B5B95",
-    intentions: [
+    id: "veladoras",
+    label: "1. Veladoras",
+    children: [
       {
-        id: "reciente",
-        label: "Por un fallecimiento reciente",
-        product: "Vela de Descanso Eterno",
-        symbol:
-          "El morado acompaña el luto y sostiene la esperanza de la resurrección.",
+        id: "veladora-san-rafael",
+        label: "San Rafael – Celeste Cinco Estrellas",
+        children: sizes("veladora-sr", ["Referencia 1", "Referencia 2", "Referencia 3", "Referencia 4"]),
       },
       {
-        id: "aniversario",
-        label: "En el aniversario de su partida",
-        product: "Vela de Memoria y Descanso",
-        symbol:
-          "Para honrar, año a año, su recuerdo con una luz que no se apaga.",
+        id: "veladora-tradicional",
+        label: "Tradicional",
+        children: [
+          { id: "veladora-blanco", label: "Blanco" },
+          { id: "veladora-azul-clara", label: "Azul clara" },
+        ],
       },
       {
-        id: "fieles",
-        label: "Por todos los fieles difuntos",
-        product: "Vela de Fieles Difuntos",
-        symbol: "La tradición de noviembre: una sola luz por todas las almas.",
+        id: "veladora-especial",
+        label: "Especial",
+        children: [
+          { id: "veladora-san-pancracio", label: "San Pancracio" },
+          { id: "veladora-llama-clientes", label: "Llama Clientes" },
+          { id: "veladora-desespero", label: "Desespero" },
+        ],
       },
     ],
   },
   {
-    id: "salud",
-    label: "Por la salud de alguien",
-    hex: "#D8CBB4",
-    intentions: [
+    id: "velones",
+    label: "2. Velones",
+    children: sizes(
+      "velon",
+      ["05", "06", "07", "7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "15", "18"].map(
+        (n) => `Velón No. ${n}`
+      )
+    ),
+  },
+  {
+    id: "cirios",
+    label: "3. Cirios",
+    children: [
       {
-        id: "propia",
-        label: "Mi propia salud",
-        product: "Vela a San Rafael Arcángel",
-        symbol:
-          "Patrono de la sanación; se enciende pidiendo por la propia recuperación.",
+        id: "cirio-especiales",
+        label: "Especiales",
+        children: [
+          { id: "cirio-pascualito", label: "Pascualito" },
+          { id: "cirio-pascual", label: "Pascual" },
+          { id: "cirio-gloria", label: "Gloria" },
+          { id: "cirio-una-libra", label: "Una libra" },
+          { id: "cirio-dos-libras", label: "Dos libras" },
+          { id: "cirio-metro-y-medio", label: "Metro y medio" },
+        ],
       },
       {
-        id: "familiar",
-        label: "La salud de un familiar",
-        product: "Vela al Divino Niño de la Salud",
-        symbol:
-          "Devoción muy arraigada en Colombia para pedir por un ser querido enfermo.",
+        id: "cirio-tradicional",
+        label: "Tradicional",
+        children: [
+          { id: "cirio-dos-y-medio", label: "Dos y medio" },
+          { id: "cirio-centimento", label: "Centimento" },
+          { id: "cirio-farol", label: "Farol" },
+        ],
       },
       {
-        id: "cirugia",
-        label: "Antes o después de una cirugía",
-        product: "Vela de Manos Seguras",
-        symbol: "Se enciende la víspera, pidiendo acierto para quienes intervienen.",
+        id: "cirio-ocasion",
+        label: "Ocasión",
+        children: [
+          { id: "cirio-bautizo", label: "Bautizo" },
+          { id: "cirio-primera-comunion", label: "Primera comunión" },
+          { id: "cirio-confirmacion", label: "Confirmación" },
+        ],
       },
     ],
   },
   {
-    id: "proteccion",
-    label: "Protección del hogar o la familia",
-    hex: "#9B3B3B",
-    intentions: [
+    id: "velas",
+    label: "4. Velas",
+    children: [
+      { id: "vela-farol", label: "Farol" },
+      { id: "vela-pequena", label: "Pequeña" },
+      { id: "vela-mediana", label: "Mediana" },
+      { id: "vela-grande", label: "Grande" },
+      { id: "vela-decorativa", label: "Decorativas – ocasión especial" },
+    ],
+  },
+  {
+    id: "desahumerios",
+    label: "5. Desahumerios",
+    children: [
       {
-        id: "mal",
-        label: "Contra las malas energías",
-        product: "Vela a San Miguel Arcángel",
-        symbol: "El rojo invoca la fuerza que aparta lo que hace daño.",
+        id: "desahumerio-sagrado",
+        label: "Sagrado",
+        children: [
+          { id: "desahumerio-sagrado-grande", label: "Grande" },
+          { id: "desahumerio-sagrado-pequeno", label: "Pequeño" },
+        ],
       },
       {
-        id: "paz",
-        label: "Paz en el hogar",
-        product: "Vela de la Sagrada Familia",
-        symbol: "Para sostener la armonía cuando el hogar está en tensión.",
+        id: "desahumerio-incienso",
+        label: "Incienso",
+        children: [
+          { id: "desahumerio-incienso-grande", label: "Grande" },
+          { id: "desahumerio-incienso-pequeno", label: "Pequeño" },
+        ],
+      },
+      { id: "desahumerio-caja", label: "Caja" },
+      { id: "desahumerio-tabaco", label: "Tabaco" },
+      { id: "desahumerio-chino", label: "Chino" },
+    ],
+  },
+  {
+    id: "libros",
+    label: "6. Libros",
+    children: [
+      {
+        id: "libro-novenas",
+        label: "Novenas",
+        children: [
+          { id: "novena-normal", label: "Normal" },
+          { id: "novena-biblica", label: "Bíblicas" },
+        ],
       },
       {
-        id: "viaje",
-        label: "Un viaje seguro",
-        product: "Vela a San Cristóbal",
-        symbol: "Patrono de los viajeros; se enciende antes de salir.",
+        id: "libro-biblias",
+        label: "Biblias",
+        children: [
+          { id: "biblia-ninos", label: "Niños / niña" },
+          { id: "biblia-adultos", label: "Adultos" },
+        ],
       },
     ],
   },
   {
-    id: "gracias",
-    label: "Agradecimiento por un favor",
-    hex: "#C89B5C",
-    intentions: [
+    id: "camandulas",
+    label: "7. Camándulas",
+    children: [
       {
-        id: "favor",
-        label: "Un favor recibido",
-        product: "Vela de Acción de Gracias",
-        symbol: "El dorado celebra un favor cumplido.",
+        id: "camandula-madera",
+        label: "Madera",
+        children: [
+          { id: "camandula-madera-nino", label: "Niño" },
+          { id: "camandula-madera-nina", label: "Niña" },
+        ],
       },
       {
-        id: "nacimiento",
-        label: "El nacimiento de un hijo",
-        product: "Vela de Bienvenida y Bendición",
-        symbol: "Para agradecer y bendecir una nueva vida en la familia.",
-      },
-      {
-        id: "gracia",
-        label: "Un aniversario de gracia",
-        product: "Vela de Memoria Agradecida",
-        symbol: "Para volver, cada año, al momento en que algo se cumplió.",
+        id: "camandula-acero",
+        label: "Acero",
+        children: [
+          { id: "camandula-acero-nino", label: "Niño" },
+          { id: "camandula-acero-nina", label: "Niña" },
+        ],
       },
     ],
   },
   {
-    id: "virgen",
-    label: "Una advocación de la Virgen María",
-    hex: "#4E7A9B",
-    intentions: [
+    id: "acero",
+    label: "8. Productos en acero",
+    children: [
+      { id: "acero-dijes", label: "Dijes" },
+      { id: "acero-camandulas", label: "Camándulas" },
+      { id: "acero-anillos", label: "Anillos" },
+      { id: "acero-cadenas", label: "Cadenas" },
+    ],
+  },
+  {
+    id: "articulos-religiosos",
+    label: "9. Artículos religiosos",
+    children: [
+      { id: "art-incensarios", label: "Incensarios" },
+      { id: "art-faroles", label: "Faroles" },
+    ],
+  },
+  {
+    id: "fiestas",
+    label: "10. Fiestas y otros",
+    children: [
       {
-        id: "carmen",
-        label: "Virgen del Carmen",
-        product: "Vela a la Virgen del Carmen",
-        symbol: "Patrona de quienes navegan momentos inciertos.",
-      },
-      {
-        id: "guadalupe",
-        label: "Virgen de Guadalupe",
-        product: "Vela a la Virgen de Guadalupe",
-        symbol: "Madre de América, cercana en toda necesidad.",
-      },
-      {
-        id: "rosario",
-        label: "Virgen del Rosario",
-        product: "Vela a la Virgen del Rosario",
-        symbol: "Compañera de quienes rezan el rosario en familia.",
-      },
-      {
-        id: "cualquiera",
-        label: "No estoy segura, cualquiera está bien",
-        product: "Vela Mariana Tradicional",
-        symbol:
-          "Una luz sencilla para encomendarse a la Virgen, sin advocación específica.",
+        id: "fiestas-faroles",
+        label: "Faroles",
+        children: [
+          { id: "farol-papel", label: "Papel" },
+          { id: "farol-madera", label: "Madera" },
+          { id: "farol-metal", label: "Metal" },
+        ],
       },
     ],
   },
   {
-    id: "trabajo",
-    label: "Trabajo o prosperidad",
-    hex: "#4C7A5B",
-    intentions: [
-      {
-        id: "empleo",
-        label: "Buscar empleo",
-        product: "Vela a San Cayetano",
-        symbol: "Patrono del pan y el trabajo diario.",
-      },
-      {
-        id: "negocio",
-        label: "Un negocio o emprendimiento",
-        product: "Vela de Prosperidad",
-        symbol: "Para acompañar un proyecto que recién comienza.",
-      },
-      {
-        id: "estabilidad",
-        label: "Estabilidad económica",
-        product: "Vela de la Divina Providencia",
-        symbol: "Se enciende pidiendo por lo que sostiene a una familia.",
-      },
+    id: "candelabros",
+    label: "12. Candelabros",
+    children: [
+      { id: "candelabro-vidrio", label: "Vidrio" },
+      { id: "candelabro-metal", label: "Metal" },
     ],
   },
   {
-    id: "santo",
-    label: "Un santo específico",
-    hex: "#8C8272",
-    intentions: [
-      {
-        id: "judas",
-        label: "San Judas Tadeo — causas difíciles",
-        product: "Vela a San Judas Tadeo",
-        symbol: "Se acude a él cuando ya no parece haber salida.",
-      },
-      {
-        id: "antonio",
-        label: "San Antonio — encontrar algo o a alguien",
-        product: "Vela a San Antonio de Padua",
-        symbol: "Patrono de lo perdido: objetos, caminos, personas.",
-      },
-      {
-        id: "barbara",
-        label: "Santa Bárbara — tormentas y protección",
-        product: "Vela a Santa Bárbara",
-        symbol: "Protectora ante el peligro repentino.",
-      },
-      {
-        id: "jose",
-        label: "San José — familia y trabajo",
-        product: "Vela a San José Obrero",
-        symbol: "Custodio del hogar y del trabajo bien hecho.",
-      },
+    id: "otros",
+    label: "13. Otros",
+    children: [
+      { id: "otros-alcancias", label: "Alcancías" },
+      { id: "otros-naturales", label: "Productos naturales" },
     ],
   },
+  { id: "imagenes", label: "14. Imágenes religiosas" },
 ];
 
-const SIZES = [
-  { id: "pequena", label: "Pequeña", desc: "10 cm · devoción diaria", price: 12000 },
-  { id: "mediana", label: "Mediana", desc: "18 cm · pensada para novenas", price: 22000 },
-  { id: "grande", label: "Grande", desc: "30 cm · dura los 9 días completos", price: 38000 },
-];
-
-const COP = (n: number) =>
-  n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+const ROOT: CatalogNode = { id: "root", label: "Catálogo", children: CATALOG_TREE };
 
 /* ============================================================
-   HISTORIAL DE BÚSQUEDAS RECIENTES (localStorage del navegador)
+   HISTORIAL DE CONSULTAS RECIENTES (localStorage del navegador)
 ============================================================ */
-type HistoryEntry = {
-  occasionId: string;
-  intentionId: string;
-  sizeId: string;
-  product: string;
-  at: number;
-};
-
+type HistoryEntry = { labels: string[]; at: number };
 const HISTORY_KEY = "belen-selector-historial";
 
 function loadHistory(): HistoryEntry[] {
@@ -262,7 +251,6 @@ function loadHistory(): HistoryEntry[] {
     return [];
   }
 }
-
 function saveHistory(entries: HistoryEntry[]) {
   if (typeof window === "undefined") return;
   try {
@@ -296,131 +284,86 @@ function Fade({ screenKey, children }: { screenKey: string; children: React.Reac
   );
 }
 
-type Screen = "landing" | "q1" | "q2" | "q3" | "loading" | "result";
+type Screen = "landing" | "browse" | "result";
+
+function whatsappHref(labels: string[]) {
+  const text = encodeURIComponent(
+    `Hola, quiero consultar disponibilidad y precio de: ${labels.join(" › ")}`
+  );
+  return `https://wa.me/?text=${text}`;
+}
 
 /* ============================================================
    COMPONENTE PRINCIPAL
 ============================================================ */
 export default function SelectorLiturgico() {
-  const { addItem } = useCart();
-
   const [screen, setScreen] = useState<Screen>("landing");
-  const [stack, setStack] = useState<Screen[]>(["landing"]);
-  const [answers, setAnswers] = useState<{
-    occasionId: string | null;
-    intentionId: string | null;
-    sizeId: string | null;
-  }>({ occasionId: null, intentionId: null, sizeId: null });
+  const [path, setPath] = useState<CatalogNode[]>([ROOT]);
+  const [selection, setSelection] = useState<CatalogNode | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     setHistory(loadHistory());
+    return () => clearTimeout(toastTimer.current);
   }, []);
 
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2200);
-  }, []);
+  const current = path[path.length - 1];
+  const breadcrumbLabels = path.slice(1).map((n) => n.label);
 
-  function go(next: Screen) {
-    setStack((s) => [...s, next]);
-    setScreen(next);
-  }
-  function back() {
-    setStack((s) => {
-      if (s.length <= 1) return s;
-      const copy = s.slice(0, -1);
-      setScreen(copy[copy.length - 1]);
-      return copy;
-    });
+  function openCatalog() {
+    setPath([ROOT]);
+    setScreen("browse");
   }
   function restart() {
-    setAnswers({ occasionId: null, intentionId: null, sizeId: null });
-    setStack(["landing"]);
+    setPath([ROOT]);
+    setSelection(null);
     setScreen("landing");
   }
-
-  function selectOccasion(id: string) {
-    setAnswers((a) => ({ ...a, occasionId: id, intentionId: null, sizeId: null }));
-    go("q2");
-  }
-  function selectIntention(id: string) {
-    setAnswers((a) => ({ ...a, intentionId: id }));
-    go("q3");
-  }
-  function selectSize(id: string) {
-    setAnswers((a) => ({ ...a, sizeId: id }));
-    go("loading");
-  }
-  function skipSize() {
-    setAnswers((a) => ({ ...a, sizeId: "mediana" }));
-    go("loading");
+  function back() {
+    if (screen === "result") {
+      setScreen("browse");
+      return;
+    }
+    if (path.length > 1) {
+      setPath((p) => p.slice(0, -1));
+    } else {
+      setScreen("landing");
+    }
   }
 
-  const occasion = OCCASIONS.find((o) => o.id === answers.occasionId) || null;
-  const intention =
-    occasion?.intentions.find((i) => i.id === answers.intentionId) || null;
-  const size = SIZES.find((s) => s.id === answers.sizeId) || SIZES[1];
-  const altIntention =
-    occasion?.intentions.find((i) => i.id !== answers.intentionId) || null;
-
-  // Avance automático desde "loading" a "result"
-  useEffect(() => {
-    if (screen !== "loading") return;
-    const t = setTimeout(() => {
-      if (occasion && intention) {
-        setHistory((h) => {
-          const entry: HistoryEntry = {
-            occasionId: occasion.id,
-            intentionId: intention.id,
-            sizeId: size.id,
-            product: intention.product,
-            at: Date.now(),
-          };
-          const filtered = h.filter(
-            (e) => !(e.occasionId === entry.occasionId && e.intentionId === entry.intentionId)
-          );
-          const next = [entry, ...filtered].slice(0, 3);
-          saveHistory(next);
-          return next;
-        });
+  const selectNode = useCallback(
+    (node: CatalogNode) => {
+      if (node.children && node.children.length > 0) {
+        setPath((p) => [...p, node]);
+        return;
       }
-      go("result");
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, 850);
-    return () => clearTimeout(t);
+      setSelection(node);
+      setScreen("result");
+      setHistory((h) => {
+        const labels = [...breadcrumbLabels, node.label];
+        const key = labels.join(" › ");
+        const filtered = h.filter((e) => e.labels.join(" › ") !== key);
+        const next = [{ labels, at: Date.now() }, ...filtered].slice(0, 4);
+        saveHistory(next);
+        return next;
+      });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen]);
-
-  function addToRealCart() {
-    if (!occasion || !intention) return;
-    addItem(
-      {
-        slug: `liturgica-${occasion.id}-${intention.id}`,
-        nombre: intention.product,
-        precio: size.price,
-        // TODO(negocio): reemplazar por una foto real de la vela/categoría
-        imagen: "/hero-velas.jpg",
-        varianteId: size.id,
-        varianteNombre: size.label,
-      },
-      1
-    );
-    showToast(`${intention.product} agregada al carrito`);
-  }
+    [breadcrumbLabels.join("|")]
+  );
 
   function resumeFromHistory(entry: HistoryEntry) {
-    setAnswers({
-      occasionId: entry.occasionId,
-      intentionId: entry.intentionId,
-      sizeId: entry.sizeId,
-    });
-    setStack(["landing", "loading"]);
-    setScreen("loading");
+    setSelection({ id: "history", label: entry.labels[entry.labels.length - 1] });
+    setPath([ROOT]);
+    setScreen("result");
   }
+
+  const selectionFullPath =
+    screen === "result" && selection ? [...breadcrumbLabels, selection.label] : [];
+
+  const siblings =
+    screen === "result" ? current.children?.filter((c) => c.id !== selection?.id) ?? [] : [];
 
   return (
     <div className="slv-root">
@@ -436,7 +379,6 @@ export default function SelectorLiturgico() {
           --ink: #EDE3D3;
           --muted: #A6997F;
           --line: rgba(237,227,211,0.10);
-          --wine: #7A2E2E;
           font-family: 'Work Sans', sans-serif;
           background: radial-gradient(120% 90% at 50% -10%, #241C15 0%, #14100D 55%, #0E0B08 100%);
           color: var(--ink);
@@ -445,12 +387,11 @@ export default function SelectorLiturgico() {
           display: flex;
           justify-content: center;
           box-sizing: border-box;
-          padding: 0;
         }
         .slv-root *, .slv-root *::before, .slv-root *::after { box-sizing: border-box; }
         .slv-shell {
           width: 100%;
-          max-width: 480px;
+          max-width: 520px;
           min-height: 70vh;
           display: flex;
           flex-direction: column;
@@ -460,7 +401,7 @@ export default function SelectorLiturgico() {
         .slv-display { font-family: 'Cormorant Garamond', serif; }
         .slv-topbar {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 18px 0 10px; min-height: 52px;
+          padding: 18px 0 6px; min-height: 52px;
         }
         .slv-iconbtn {
           background: transparent; border: none; color: var(--ink);
@@ -471,9 +412,7 @@ export default function SelectorLiturgico() {
         .slv-iconbtn:hover { background: rgba(237,227,211,0.06); }
         .slv-iconbtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-        .slv-dots { display: flex; gap: 7px; }
-        .slv-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--line); transition: background 300ms; }
-        .slv-dot.active { background: var(--gold); }
+        .slv-breadcrumb { font-size: 0.78rem; color: var(--muted); text-align: center; flex: 1; padding: 0 8px; }
 
         .slv-flame-wrap { display:flex; justify-content:center; margin: 26px 0 6px; }
         @keyframes flicker {
@@ -485,8 +424,8 @@ export default function SelectorLiturgico() {
         .slv-flame { animation: flicker 3.2s ease-in-out infinite; filter: drop-shadow(0 0 18px rgba(200,155,92,0.45)); }
         @media (prefers-reduced-motion: reduce) { .slv-flame { animation: none; } }
 
-        .slv-h1 { font-size: 2.5rem; line-height: 1.1; font-weight: 500; margin: 0 0 10px; text-align:center; }
-        .slv-sub { color: var(--muted); font-size: 1rem; line-height: 1.5; text-align:center; margin: 0 auto 30px; max-width: 34ch; }
+        .slv-h1 { font-size: 2.3rem; line-height: 1.15; font-weight: 500; margin: 0 0 10px; text-align:center; }
+        .slv-sub { color: var(--muted); font-size: 1rem; line-height: 1.5; text-align:center; margin: 0 auto 30px; max-width: 36ch; }
 
         .slv-cta {
           width: 100%; border: none; cursor: pointer;
@@ -495,9 +434,9 @@ export default function SelectorLiturgico() {
           padding: 17px 20px; border-radius: 14px;
           box-shadow: 0 10px 24px -8px rgba(200,155,92,0.55);
           transition: transform 180ms ease, box-shadow 180ms ease;
+          text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
         .slv-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -8px rgba(200,155,92,0.65); }
-        .slv-cta:active { transform: translateY(0px) scale(0.99); }
         .slv-cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
         .slv-ghost {
@@ -506,6 +445,7 @@ export default function SelectorLiturgico() {
           font-size: 0.95rem; padding: 14px 18px; border-radius: 14px;
           transition: border-color 200ms ease, background 200ms ease;
           text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+          margin-bottom: 10px;
         }
         .slv-ghost:hover { border-color: rgba(237,227,211,0.28); background: rgba(237,227,211,0.03); }
         .slv-ghost:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -514,70 +454,43 @@ export default function SelectorLiturgico() {
         .slv-qtitle { font-size: 1.6rem; font-weight: 500; margin: 2px 0 22px; line-height:1.25; }
 
         .slv-option {
-          width: 100%; display:flex; align-items:center; gap: 14px;
+          width: 100%; display:flex; align-items:center; justify-content: space-between; gap: 14px;
           background: var(--panel); border: 1px solid var(--line);
           border-radius: 14px; padding: 16px 16px; margin-bottom: 10px;
           cursor: pointer; text-align: left; color: var(--ink); font-size: 1rem;
           transition: border-color 200ms ease, background 200ms ease, transform 150ms ease;
-          min-height: 60px;
+          min-height: 56px;
         }
         .slv-option:hover { border-color: var(--gold); background: var(--panel-2); transform: translateY(-1px); }
         .slv-option:active { transform: translateY(0); }
         .slv-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-        .slv-swatch { width: 13px; height: 13px; border-radius: 999px; flex: none; box-shadow: 0 0 0 3px rgba(237,227,211,0.06); }
-
-        .slv-size-card {
-          width: 100%; background: var(--panel); border: 1px solid var(--line);
-          border-radius: 14px; padding: 16px; margin-bottom: 10px; cursor:pointer;
-          display:flex; justify-content:space-between; align-items:center; gap: 12px;
-          transition: border-color 200ms ease, background 200ms ease;
-        }
-        .slv-size-card:hover { border-color: var(--gold); background: var(--panel-2); }
-        .slv-size-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-        .slv-size-name { font-weight: 600; font-size: 1.02rem; }
-        .slv-size-desc { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
-        .slv-size-price { font-weight: 600; color: var(--gold-bright); font-size: 1rem; white-space:nowrap; }
-
-        .slv-loading-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; min-height: 40vh; }
-        .slv-spin { animation: spin 1s linear infinite; color: var(--gold); }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .slv-chevron { color: var(--muted); flex: none; }
 
         .slv-result-card {
           background: linear-gradient(180deg, var(--panel-2), var(--panel));
           border: 1px solid var(--line); border-radius: 18px; padding: 26px 22px;
           text-align: center; margin-bottom: 16px;
         }
-        .slv-result-dot { width: 46px; height: 46px; border-radius: 999px; margin: 0 auto 16px; box-shadow: 0 0 0 6px rgba(237,227,211,0.05); }
-        .slv-result-name { font-size: 1.7rem; font-weight: 500; margin: 0 0 4px; }
-        .slv-result-meta { color: var(--muted); font-size: 0.88rem; margin-bottom: 14px; }
-        .slv-result-symbol { color: var(--ink); font-size: 0.98rem; line-height: 1.6; opacity: 0.9; margin: 0 auto 18px; max-width: 40ch; }
-        .slv-price { font-size: 1.5rem; font-weight: 600; color: var(--gold-bright); margin-bottom: 18px; }
+        .slv-result-eyebrow { color: var(--muted); font-size: 0.82rem; margin-bottom: 8px; }
+        .slv-result-name { font-size: 1.7rem; font-weight: 500; margin: 0 0 16px; }
 
-        .slv-alt {
-          border: 1px dashed var(--line); border-radius: 14px; padding: 14px 16px;
-          display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 18px;
+        .slv-sibling-row { display:flex; flex-wrap: wrap; gap: 8px; justify-content:center; margin-bottom: 20px; }
+        .slv-sibling-chip {
+          background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+          font-size: 0.82rem; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+          transition: border-color 200ms ease;
         }
-        .slv-alt-text { font-size: 0.9rem; color: var(--muted); }
-        .slv-alt-link { background:none; border:none; color: var(--gold); font-size: 0.88rem; cursor:pointer; text-decoration: underline; text-underline-offset: 3px; padding:4px; }
+        .slv-sibling-chip:hover { border-color: var(--gold); }
 
         .slv-link { background:none; border:none; color: var(--muted); font-size: 0.9rem; cursor:pointer; text-decoration: underline; text-underline-offset:3px; }
         .slv-link:hover { color: var(--ink); }
 
-        .slv-toast {
-          position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
-          background: var(--ink); color: #1A1309; font-size: 0.9rem; font-weight: 500;
-          padding: 12px 18px; border-radius: 999px; box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-          z-index: 50; display:flex; align-items:center; gap:8px;
-        }
-
         .slv-history-item {
           width:100%; text-align:left; background: var(--panel); border:1px solid var(--line);
           border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor:pointer; color: var(--ink);
-          font-size: 0.88rem; transition: border-color 200ms ease;
+          font-size: 0.85rem; transition: border-color 200ms ease;
         }
         .slv-history-item:hover { border-color: var(--gold); }
-
-        .slv-note { font-size: 0.76rem; color: var(--muted); text-align:center; margin-top: 6px; opacity: 0.8; }
       `}</style>
 
       <div className="slv-shell">
@@ -586,13 +499,13 @@ export default function SelectorLiturgico() {
             <button className="slv-iconbtn" onClick={back} aria-label="Volver">
               <ArrowLeft size={20} />
             </button>
-            {["q1", "q2", "q3"].includes(screen) && (
-              <div className="slv-dots" aria-hidden="true">
-                <span className="slv-dot active" />
-                <span className={`slv-dot ${["q2", "q3"].includes(screen) ? "active" : ""}`} />
-                <span className={`slv-dot ${screen === "q3" ? "active" : ""}`} />
-              </div>
-            )}
+            <div className="slv-breadcrumb">
+              {screen === "browse"
+                ? breadcrumbLabels.length > 0
+                  ? breadcrumbLabels.join(" › ")
+                  : "Líneas de productos"
+                : selectionFullPath.slice(0, -1).join(" › ")}
+            </div>
             <button className="slv-iconbtn" onClick={restart} aria-label="Empezar de nuevo">
               <X size={20} />
             </button>
@@ -606,169 +519,98 @@ export default function SelectorLiturgico() {
               <div className="slv-flame-wrap">
                 <FlameIcon />
               </div>
-              <h1 className="slv-h1 slv-display">Encuentra tu vela</h1>
+              <h1 className="slv-h1 slv-display">Explora nuestro catálogo</h1>
               <p className="slv-sub">
-                Responde tres preguntas breves y te decimos, sin rodeos, qué
-                vela encender hoy.
+                Recorre nuestras líneas de productos —veladoras, cirios,
+                desahumerios, artículos religiosos y más— hasta encontrar
+                justo lo que buscas.
               </p>
-              <button className="slv-cta" onClick={() => go("q1")}>
-                Empezar
+              <button className="slv-cta" onClick={openCatalog}>
+                Ver líneas de productos
               </button>
 
               {history.length > 0 && (
                 <div style={{ marginTop: 34 }}>
                   <div className="slv-qlabel" style={{ marginBottom: 10 }}>
-                    Tus búsquedas recientes
+                    Tus consultas recientes
                   </div>
-                  {history.map((h) => {
-                    const occ = OCCASIONS.find((o) => o.id === h.occasionId);
-                    return (
-                      <button
-                        key={h.occasionId + h.intentionId}
-                        className="slv-history-item"
-                        onClick={() => resumeFromHistory(h)}
-                      >
-                        {h.product}{" "}
-                        <span style={{ color: "var(--muted)" }}>· {occ?.label}</span>
-                      </button>
-                    );
-                  })}
+                  {history.map((h) => (
+                    <button
+                      key={h.labels.join("|")}
+                      className="slv-history-item"
+                      onClick={() => resumeFromHistory(h)}
+                    >
+                      {h.labels[h.labels.length - 1]}{" "}
+                      <span style={{ color: "var(--muted)" }}>
+                        · {h.labels.slice(0, -1).join(" › ")}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
           </Fade>
         )}
 
-        {/* ---------------- Q1: OCASIÓN ---------------- */}
-        {screen === "q1" && (
-          <Fade screenKey="q1">
-            <div className="slv-qlabel">Paso 1 de 3</div>
-            <h2 className="slv-qtitle slv-display">¿Para qué necesitas la vela?</h2>
-            {OCCASIONS.map((o) => (
-              <button key={o.id} className="slv-option" onClick={() => selectOccasion(o.id)}>
-                <span className="slv-swatch" style={{ background: o.hex }} />
-                {o.label}
+        {/* ---------------- NAVEGACIÓN POR LÍNEA/CATEGORÍA ---------------- */}
+        {screen === "browse" && (
+          <Fade screenKey={breadcrumbLabels.join("|")}>
+            <h2 className="slv-qtitle slv-display">
+              {path.length === 1 ? "¿Qué línea buscas?" : current.label}
+            </h2>
+            {(current.children ?? []).map((node) => (
+              <button key={node.id} className="slv-option" onClick={() => selectNode(node)}>
+                {node.label}
+                {node.children && node.children.length > 0 && (
+                  <ChevronRight size={18} className="slv-chevron" />
+                )}
               </button>
             ))}
           </Fade>
-        )}
-
-        {/* ---------------- Q2: INTENCIÓN ---------------- */}
-        {screen === "q2" && occasion && (
-          <Fade screenKey="q2">
-            <div className="slv-qlabel">Paso 2 de 3</div>
-            <h2 className="slv-qtitle slv-display">Cuéntanos un poco más</h2>
-            {occasion.intentions.map((i) => (
-              <button key={i.id} className="slv-option" onClick={() => selectIntention(i.id)}>
-                {i.label}
-              </button>
-            ))}
-          </Fade>
-        )}
-
-        {/* ---------------- Q3: TAMAÑO ---------------- */}
-        {screen === "q3" && (
-          <Fade screenKey="q3">
-            <div className="slv-qlabel">Paso 3 de 3 · opcional</div>
-            <h2 className="slv-qtitle slv-display">¿Qué tamaño prefieres?</h2>
-            {SIZES.map((s) => (
-              <button key={s.id} className="slv-size-card" onClick={() => selectSize(s.id)}>
-                <span>
-                  <span className="slv-size-name">{s.label}</span>
-                  <div className="slv-size-desc">{s.desc}</div>
-                </span>
-                <span className="slv-size-price">{COP(s.price)}</span>
-              </button>
-            ))}
-            <button
-              className="slv-link"
-              style={{ display: "block", margin: "8px auto 0" }}
-              onClick={skipSize}
-            >
-              Omitir y mostrar mi recomendación
-            </button>
-          </Fade>
-        )}
-
-        {/* ---------------- LOADING ---------------- */}
-        {screen === "loading" && (
-          <div className="slv-loading-wrap">
-            <Loader2 className="slv-spin" size={30} />
-            <p style={{ color: "var(--muted)" }}>Buscando tu vela…</p>
-          </div>
         )}
 
         {/* ---------------- RESULTADO ---------------- */}
-        {screen === "result" && (
+        {screen === "result" && selection && (
           <Fade screenKey="result">
-            {occasion && intention ? (
-              <>
-                <div className="slv-result-card">
-                  <div className="slv-result-dot" style={{ background: occasion.hex }} />
-                  <h2 className="slv-result-name slv-display">{intention.product}</h2>
-                  <div className="slv-result-meta">
-                    Tamaño {size.label.toLowerCase()} · {size.desc}
-                  </div>
-                  <p className="slv-result-symbol">{intention.symbol}</p>
-                  <div className="slv-price">{COP(size.price)}</div>
-                  <button className="slv-cta" onClick={addToRealCart}>
-                    Agregar al carrito
-                  </button>
-                </div>
-
-                {altIntention && (
-                  <div className="slv-alt">
-                    <span className="slv-alt-text">
-                      ¿Y si es «{altIntention.label.toLowerCase()}»?
-                    </span>
-                    <button
-                      className="slv-alt-link"
-                      onClick={() => setAnswers((a) => ({ ...a, intentionId: altIntention.id }))}
-                    >
-                      Ver esa
-                    </button>
-                  </div>
-                )}
-
-                <Link href="/carrito" className="slv-ghost" style={{ gap: 8, marginBottom: 10 }}>
-                  <ShoppingBag size={17} style={{ marginRight: 6 }} />
-                  Ver mi carrito
-                </Link>
-                <button className="slv-ghost" style={{ marginBottom: 10 }} onClick={() => go("q1")}>
-                  Elegir otra ocasión
-                </button>
-                <ShareRow occasion={occasion} intention={intention} size={size} />
-              </>
-            ) : (
-              <div className="slv-empty">
-                <FlameIcon />
-                <p style={{ color: "var(--muted)" }}>
-                  No encontramos una coincidencia exacta. Escríbenos y te
-                  ayudamos a elegir en persona.
-                </p>
-                <button className="slv-cta" onClick={restart}>
-                  Empezar de nuevo
-                </button>
+            <div className="slv-result-card">
+              <div className="slv-result-eyebrow">
+                {selectionFullPath.slice(0, -1).join(" › ") || "Catálogo"}
               </div>
-            )}
-          </Fade>
-        )}
+              <h2 className="slv-result-name slv-display">{selection.label}</h2>
+              <a className="slv-cta" href={whatsappHref(selectionFullPath)} target="_blank" rel="noopener noreferrer">
+                <MessageCircle size={18} />
+                Consultar precio y disponibilidad
+              </a>
+            </div>
 
-        {/* Toast de feedback */}
-        {toast && (
-          <div className="slv-toast" role="status">
-            <Check size={16} />
-            {toast}
-          </div>
+            {siblings.length > 0 && (
+              <>
+                <div className="slv-qlabel" style={{ textAlign: "center", marginBottom: 10 }}>
+                  También en {current.label}
+                </div>
+                <div className="slv-sibling-row">
+                  {siblings.slice(0, 6).map((s) => (
+                    <button key={s.id} className="slv-sibling-chip" onClick={() => selectNode(s)}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <Link href="/catalogo" className="slv-ghost">
+              Ver catálogo completo
+            </Link>
+            <button className="slv-link" style={{ display: "block", margin: "4px auto 0" }} onClick={openCatalog}>
+              Explorar otra línea
+            </button>
+          </Fade>
         )}
       </div>
     </div>
   );
 }
 
-/* ============================================================
-   SUBCOMPONENTES
-============================================================ */
 function FlameIcon() {
   return (
     <svg className="slv-flame" width="52" height="72" viewBox="0 0 52 72" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -789,32 +631,5 @@ function FlameIcon() {
         </linearGradient>
       </defs>
     </svg>
-  );
-}
-
-function ShareRow({
-  occasion,
-  intention,
-  size,
-}: {
-  occasion: Ocasion;
-  intention: Intencion;
-  size: (typeof SIZES)[number];
-}) {
-  const text = encodeURIComponent(
-    `Encontré esta vela en Belén Resplandor de Luz: ${intention.product} (${size.label}) — ${intention.symbol}`
-  );
-  const href = `https://wa.me/?text=${text}`;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="slv-ghost"
-      style={{ gap: 8, marginBottom: 10 }}
-    >
-      <MessageCircle size={17} style={{ marginRight: 6 }} />
-      Consultarlo por WhatsApp
-    </a>
   );
 }

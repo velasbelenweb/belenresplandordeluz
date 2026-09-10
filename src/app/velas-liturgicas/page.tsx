@@ -1,9 +1,9 @@
 import SelectorLiturgico from "@/components/SelectorLiturgico";
 
 export const metadata = {
-  title: "Encuentra tu vela | Belén Resplandor de Luz",
+  title: "Explora nuestras líneas | Belén Resplandor de Luz",
   description:
-    "Responde tres preguntas breves y te decimos qué vela encender según tu ocasión o intención.",
+    "Recorre nuestras líneas de productos —veladoras, cirios, desahumerios, artículos religiosos y más— y consulta disponibilidad por WhatsApp.",
 };
 
 export default function VelasLiturgicasPage() {
