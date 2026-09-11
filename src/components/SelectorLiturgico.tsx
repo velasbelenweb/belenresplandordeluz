@@ -35,6 +35,9 @@ type CatalogNode = {
    * slugsExistentes, la hoja navega a /producto/[slug] en vez de mostrar
    * la pantalla de "consultar por WhatsApp". */
   productSlug?: string;
+  /** Foto de referencia a mostrar en la pantalla de "consultar por
+   * WhatsApp" mientras el producto real todavía no existe en el catálogo. */
+  previewImage?: string;
 };
 
 // Las 5 líneas/advocaciones que agrupan Veladoras, Velones, Cirios y Velas.
@@ -62,7 +65,12 @@ function veladorasPorLinea(): CatalogNode[] {
       id: `veladora-${ls}`,
       label: linea,
       children: [
-        { id: `veladora-${ls}-no1`, label: "Veladora No. 1", productSlug: `veladora-no-1-${ls}` },
+        {
+          id: `veladora-${ls}-no1`,
+          label: "Veladora No. 1",
+          productSlug: `veladora-no-1-${ls}`,
+          previewImage: "/productos/veladora-no-1.jpg",
+        },
       ],
     };
   });
@@ -264,21 +272,6 @@ const CATALOG_TREE: CatalogNode[] = [
 ];
 
 const ROOT: CatalogNode = { id: "root", label: "Catálogo", children: CATALOG_TREE };
-
-// Mismo mapa de colores usado en VariantSelector, para que las opciones de
-// color (ej. Veladora No. 1) se vean consistentes en todo el sitio.
-const COLOR_SWATCHES: Record<string, string> = {
-  blanco: "#FFFFFF",
-  "azul marino": "#1B2A6B",
-  celeste: "#7EC8E3",
-  amarillo: "#F2C230",
-  verde: "#1F5C3A",
-  rojo: "#C21F26",
-  naranja: "#E8731A",
-  rosado: "#F0A8C4",
-  morado: "#5B2A86",
-  negro: "#111111",
-};
 
 /* ============================================================
    HISTORIAL DE CONSULTAS RECIENTES (localStorage del navegador)
@@ -533,6 +526,11 @@ export default function SelectorLiturgico({
         }
         .slv-result-eyebrow { color: var(--muted); font-size: 0.82rem; margin-bottom: 8px; }
         .slv-result-name { font-size: 1.7rem; font-weight: 500; margin: 0 0 16px; }
+        .slv-result-image {
+          width: 100%; max-width: 220px; aspect-ratio: 1 / 1; object-fit: cover;
+          border-radius: 14px; margin: 0 auto 18px; display: block;
+          border: 1px solid var(--line);
+        }
 
         .slv-sibling-row { display:flex; flex-wrap: wrap; gap: 8px; justify-content:center; margin-bottom: 20px; }
         .slv-sibling-chip {
@@ -639,32 +637,14 @@ export default function SelectorLiturgico({
             <h2 className="slv-qtitle slv-display">
               {path.length === 1 ? "¿Qué línea buscas?" : current.label}
             </h2>
-            {(current.children ?? []).map((node) => {
-              const swatch = COLOR_SWATCHES[node.label.trim().toLowerCase()];
-              return (
-                <button key={node.id} className="slv-option" onClick={() => selectNode(node)}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                    {swatch && (
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: "999px",
-                          background: swatch,
-                          border: "1px solid rgba(237,227,211,0.25)",
-                          flex: "none",
-                        }}
-                      />
-                    )}
-                    {node.label}
-                  </span>
-                  {node.children && node.children.length > 0 && (
-                    <ChevronRight size={18} className="slv-chevron" />
-                  )}
-                </button>
-              );
-            })}
+            {(current.children ?? []).map((node) => (
+              <button key={node.id} className="slv-option" onClick={() => selectNode(node)}>
+                {node.label}
+                {node.children && node.children.length > 0 && (
+                  <ChevronRight size={18} className="slv-chevron" />
+                )}
+              </button>
+            ))}
           </Fade>
         )}
 
@@ -672,6 +652,14 @@ export default function SelectorLiturgico({
         {screen === "result" && selection && (
           <Fade screenKey="result">
             <div className="slv-result-card">
+              {selection.previewImage && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selection.previewImage}
+                  alt={selection.label}
+                  className="slv-result-image"
+                />
+              )}
               <div className="slv-result-eyebrow">
                 {selectionFullPath.slice(0, -1).join(" › ") || "Catálogo"}
               </div>
