@@ -32,32 +32,37 @@ type CatalogNode = {
 const sizes = (prefix: string, values: string[]): CatalogNode[] =>
   values.map((v) => ({ id: `${prefix}-${v}`, label: v }));
 
+const VELON_SIZES = ["05", "06", "07", "7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "15", "18"];
+const VELA_TIPOS = ["Farol", "Pequeña", "Mediana", "Grande", "Decorativas – ocasión especial"];
+
+// Cada línea (San Rafael, Celeste, etc.) ofrece los tres mismos formatos:
+// una veladora No. 1, un velón (en todos los tamaños de línea 2) y una vela
+// (en todos los tipos de línea 4). Cada combinación es un producto individual
+// con su propio precio — por ahora, hasta que existan en el catálogo real,
+// cada opción lleva a "consultar por WhatsApp" en vez de a una ficha de
+// producto (ver nota más abajo sobre cómo activarlos uno por uno).
+function lineaEspecial(prefix: string): CatalogNode[] {
+  return [
+    { id: `${prefix}-veladora`, label: "Veladora No. 1" },
+    {
+      id: `${prefix}-velon`,
+      label: "Velón",
+      children: sizes(`${prefix}-velon`, VELON_SIZES.map((n) => `Velón No. ${n}`)),
+    },
+    {
+      id: `${prefix}-vela`,
+      label: "Vela",
+      children: VELA_TIPOS.map((t) => ({ id: `${prefix}-vela-${t}`, label: t })),
+    },
+  ];
+}
+
 const CATALOG_TREE: CatalogNode[] = [
   {
     id: "veladoras",
     label: "1. Veladoras",
     children: [
-      {
-        id: "veladora-san-rafael",
-        label: "San Rafael – Celeste Cinco Estrellas",
-        children: sizes("veladora-sr", ["Referencia 1", "Referencia 2", "Referencia 3", "Referencia 4"]),
-      },
-      {
-        id: "veladora-no-1",
-        label: "Veladora No. 1",
-        children: [
-          { id: "veladora-no1-blanco", label: "Blanco", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-azul-marino", label: "Azul Marino", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-celeste", label: "Celeste", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-amarillo", label: "Amarillo", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-verde", label: "Verde", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-rojo", label: "Rojo", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-naranja", label: "Naranja", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-rosado", label: "Rosado", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-morado", label: "Morado", productSlug: "veladora-no-1" },
-          { id: "veladora-no1-negro", label: "Negro", productSlug: "veladora-no-1" },
-        ],
-      },
+      { id: "veladora-no-1-plain", label: "Veladora No. 1", productSlug: "veladora-no-1" },
       {
         id: "veladora-especial",
         label: "Especial",
@@ -70,14 +75,24 @@ const CATALOG_TREE: CatalogNode[] = [
     ],
   },
   {
+    id: "veladoras-especiales",
+    label: "Veladoras Especiales",
+    children: [
+      { id: "ve-san-rafael", label: "San Rafael", children: lineaEspecial("ve-san-rafael") },
+      { id: "ve-celeste", label: "Celeste", children: lineaEspecial("ve-celeste") },
+      { id: "ve-cinco-estrellas", label: "Cinco Estrellas", children: lineaEspecial("ve-cinco-estrellas") },
+      {
+        id: "ve-sagrado-corazon",
+        label: "Sagrado Corazón de Jesús",
+        children: lineaEspecial("ve-sagrado-corazon"),
+      },
+      { id: "ve-otros", label: "Otros", children: lineaEspecial("ve-otros") },
+    ],
+  },
+  {
     id: "velones",
     label: "2. Velones",
-    children: sizes(
-      "velon",
-      ["05", "06", "07", "7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "15", "18"].map(
-        (n) => `Velón No. ${n}`
-      )
-    ),
+    children: sizes("velon", VELON_SIZES.map((n) => `Velón No. ${n}`)),
   },
   {
     id: "cirios",
