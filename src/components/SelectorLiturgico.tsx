@@ -4,143 +4,144 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, X, ChevronRight, MessageCircle } from "lucide-react";
+import { slugify } from "@/lib/products";
 
 /* ============================================================
    ÁRBOL DE CATEGORÍAS
    ------------------------------------------------------------
-   Refleja la hoja "Inventario de productos y artículos" del
-   negocio: Línea -> Categoría -> (Subcategoría) -> Referencia.
-   No incluye precios porque el inventario no los trae por
-   referencia (varían mucho, ej. Velón No. 5 vs No. 18) — la
-   cotización final se resuelve por WhatsApp.
+   Refleja el orden de "Líneas y productos" del negocio: cada
+   línea principal (Veladoras, Velones, Cirios, Velas) se
+   organiza primero por diseño/advocación —San Rafael, Cinco
+   Estrellas, Celeste, Sagrado Corazón de Jesús, Otros— y dentro
+   de cada una van sus referencias propias.
 
-   TODO(negocio): si algún día quieren venta directa desde aquí
-   (sin pasar por WhatsApp), hay que mapear cada id de referencia
-   a un producto+precio real del catálogo y usar useCart().
+   Cada referencia final es, en teoría, un producto individual
+   con su propio precio (~200 combinaciones en total). Como no
+   existen todavía como productos reales, cada hoja recibe un
+   "productSlug" con un nombre predecible (ver slugify más abajo).
+   El selector revisa en tiempo real (prop slugsExistentes) si ya
+   fue creado desde el panel Admin con ese slug exacto:
+     - si existe -> lleva directo a la ficha del producto real
+     - si no existe todavía -> cae a "consultar por WhatsApp"
+   Así no hay que tocar este código cada vez que agreguen un
+   producto: solo hay que usar el slug indicado al crearlo.
 ============================================================ */
 
 type CatalogNode = {
   id: string;
   label: string;
   children?: CatalogNode[];
-  /** Si está presente, esta hoja es un producto real del catálogo con precio
-   * y compra en línea: en vez de la pantalla de "consultar por WhatsApp",
-   * se navega directo a su ficha de producto. */
+  /** Slug esperado del producto real (ver nota arriba). Si existe en
+   * slugsExistentes, la hoja navega a /producto/[slug] en vez de mostrar
+   * la pantalla de "consultar por WhatsApp". */
   productSlug?: string;
 };
+
+// Las 5 líneas/advocaciones que agrupan Veladoras, Velones, Cirios y Velas.
+const LINEAS = ["San Rafael", "Cinco Estrellas", "Celeste", "Sagrado Corazón de Jesús", "Otros"];
 
 const sizes = (prefix: string, values: string[]): CatalogNode[] =>
   values.map((v) => ({ id: `${prefix}-${v}`, label: v }));
 
-const VELON_SIZES = ["05", "06", "07", "7.5", "8", "8.5", "9", "9.5", "10", "11", "12", "14", "15", "18"];
+const VELON_REFS = [
+  "05", "06", "07", "7.5", "8", "8.5", "9", "9.5",
+  "10", "11", "12", "14", "15", "18", "19", "20", "25", "27", "29",
+];
 const VELA_TIPOS = ["Farol", "Pequeña", "Mediana", "Grande", "Decorativas – ocasión especial"];
+const CIRIO_TRADICIONALES = ["Dos y medio", "Centimento", "Farol"];
+const CIRIO_ESPECIALES = ["Pascualito", "Pascual", "Gloria", "Una libra", "Dos libras", "Metro y medio"];
+const CIRIO_OCACION = ["Bautizo", "Primera comunión", "Confirmación"];
 
-// Cada línea (San Rafael, Celeste, etc.) ofrece los tres mismos formatos:
-// una veladora No. 1, un velón (en todos los tamaños de línea 2) y una vela
-// (en todos los tipos de línea 4). Cada combinación es un producto individual
-// con su propio precio — por ahora, hasta que existan en el catálogo real,
-// cada opción lleva a "consultar por WhatsApp" en vez de a una ficha de
-// producto (ver nota más abajo sobre cómo activarlos uno por uno).
-function lineaEspecial(prefix: string): CatalogNode[] {
-  return [
-    { id: `${prefix}-veladora`, label: "Veladora No. 1" },
-    {
-      id: `${prefix}-velon`,
-      label: "Velón",
-      children: sizes(`${prefix}-velon`, VELON_SIZES.map((n) => `Velón No. ${n}`)),
-    },
-    {
-      id: `${prefix}-vela`,
-      label: "Vela",
-      children: VELA_TIPOS.map((t) => ({ id: `${prefix}-vela-${t}`, label: t })),
-    },
-  ];
+// -- Generadores: una función por línea de producto (Veladoras/Velones/
+// Cirios/Velas), cada una repitiendo la misma estructura para las 5 líneas.
+
+function veladorasPorLinea(): CatalogNode[] {
+  return LINEAS.map((linea) => {
+    const ls = slugify(linea);
+    return {
+      id: `veladora-${ls}`,
+      label: linea,
+      children: [
+        { id: `veladora-${ls}-no1`, label: "Veladora No. 1", productSlug: `veladora-no-1-${ls}` },
+      ],
+    };
+  });
+}
+
+function velonesPorLinea(): CatalogNode[] {
+  return LINEAS.map((linea) => {
+    const ls = slugify(linea);
+    return {
+      id: `velon-${ls}`,
+      label: linea,
+      children: VELON_REFS.map((n) => ({
+        id: `velon-${ls}-${n}`,
+        label: `Velón No. ${n}`,
+        productSlug: `velon-no-${slugify(n)}-${ls}`,
+      })),
+    };
+  });
+}
+
+function ciriosPorLinea(): CatalogNode[] {
+  return LINEAS.map((linea) => {
+    const ls = slugify(linea);
+    return {
+      id: `cirio-${ls}`,
+      label: linea,
+      children: [
+        {
+          id: `cirio-${ls}-tradicionales`,
+          label: "Tradicionales",
+          children: CIRIO_TRADICIONALES.map((t) => ({
+            id: `cirio-${ls}-trad-${slugify(t)}`,
+            label: t,
+            productSlug: `cirio-${slugify(t)}-${ls}`,
+          })),
+        },
+        {
+          id: `cirio-${ls}-especiales`,
+          label: "Especiales",
+          children: CIRIO_ESPECIALES.map((t) => ({
+            id: `cirio-${ls}-esp-${slugify(t)}`,
+            label: t,
+            productSlug: `cirio-${slugify(t)}-${ls}`,
+          })),
+        },
+        {
+          id: `cirio-${ls}-ocacion`,
+          label: "Ocación",
+          children: CIRIO_OCACION.map((t) => ({
+            id: `cirio-${ls}-oca-${slugify(t)}`,
+            label: t,
+            productSlug: `cirio-${slugify(t)}-${ls}`,
+          })),
+        },
+      ],
+    };
+  });
+}
+
+function velasPorLinea(): CatalogNode[] {
+  return LINEAS.map((linea) => {
+    const ls = slugify(linea);
+    return {
+      id: `vela-${ls}`,
+      label: linea,
+      children: VELA_TIPOS.map((t) => ({
+        id: `vela-${ls}-${slugify(t)}`,
+        label: t,
+        productSlug: `vela-${slugify(t)}-${ls}`,
+      })),
+    };
+  });
 }
 
 const CATALOG_TREE: CatalogNode[] = [
-  {
-    id: "veladoras",
-    label: "1. Veladoras",
-    children: [
-      { id: "veladora-no-1-plain", label: "Veladora No. 1", productSlug: "veladora-no-1" },
-      {
-        id: "veladora-especial",
-        label: "Especial",
-        children: [
-          { id: "veladora-san-pancracio", label: "San Pancracio" },
-          { id: "veladora-llama-clientes", label: "Llama Clientes" },
-          { id: "veladora-desespero", label: "Desespero" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "veladoras-especiales",
-    label: "Veladoras Especiales",
-    children: [
-      { id: "ve-san-rafael", label: "San Rafael", children: lineaEspecial("ve-san-rafael") },
-      { id: "ve-celeste", label: "Celeste", children: lineaEspecial("ve-celeste") },
-      { id: "ve-cinco-estrellas", label: "Cinco Estrellas", children: lineaEspecial("ve-cinco-estrellas") },
-      {
-        id: "ve-sagrado-corazon",
-        label: "Sagrado Corazón de Jesús",
-        children: lineaEspecial("ve-sagrado-corazon"),
-      },
-      { id: "ve-otros", label: "Otros", children: lineaEspecial("ve-otros") },
-    ],
-  },
-  {
-    id: "velones",
-    label: "2. Velones",
-    children: sizes("velon", VELON_SIZES.map((n) => `Velón No. ${n}`)),
-  },
-  {
-    id: "cirios",
-    label: "3. Cirios",
-    children: [
-      {
-        id: "cirio-especiales",
-        label: "Especiales",
-        children: [
-          { id: "cirio-pascualito", label: "Pascualito" },
-          { id: "cirio-pascual", label: "Pascual" },
-          { id: "cirio-gloria", label: "Gloria" },
-          { id: "cirio-una-libra", label: "Una libra" },
-          { id: "cirio-dos-libras", label: "Dos libras" },
-          { id: "cirio-metro-y-medio", label: "Metro y medio" },
-        ],
-      },
-      {
-        id: "cirio-tradicional",
-        label: "Tradicional",
-        children: [
-          { id: "cirio-dos-y-medio", label: "Dos y medio" },
-          { id: "cirio-centimento", label: "Centimento" },
-          { id: "cirio-farol", label: "Farol" },
-        ],
-      },
-      {
-        id: "cirio-ocasion",
-        label: "Ocasión",
-        children: [
-          { id: "cirio-bautizo", label: "Bautizo" },
-          { id: "cirio-primera-comunion", label: "Primera comunión" },
-          { id: "cirio-confirmacion", label: "Confirmación" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "velas",
-    label: "4. Velas",
-    children: [
-      { id: "vela-farol", label: "Farol" },
-      { id: "vela-pequena", label: "Pequeña" },
-      { id: "vela-mediana", label: "Mediana" },
-      { id: "vela-grande", label: "Grande" },
-      { id: "vela-decorativa", label: "Decorativas – ocasión especial" },
-    ],
-  },
+  { id: "veladoras", label: "1. Veladoras", children: veladorasPorLinea() },
+  { id: "velones", label: "2. Velones", children: velonesPorLinea() },
+  { id: "cirios", label: "3. Cirios", children: ciriosPorLinea() },
+  { id: "velas", label: "4. Velas", children: velasPorLinea() },
   {
     id: "desahumerios",
     label: "5. Desahumerios",
@@ -245,12 +246,13 @@ const CATALOG_TREE: CatalogNode[] = [
   },
   {
     id: "candelabros",
-    label: "12. Candelabros",
+    label: "11. Candelabros",
     children: [
       { id: "candelabro-vidrio", label: "Vidrio" },
       { id: "candelabro-metal", label: "Metal" },
     ],
   },
+  { id: "imagenes", label: "12. Imágenes religiosas" },
   {
     id: "otros",
     label: "13. Otros",
@@ -259,7 +261,6 @@ const CATALOG_TREE: CatalogNode[] = [
       { id: "otros-naturales", label: "Productos naturales" },
     ],
   },
-  { id: "imagenes", label: "14. Imágenes religiosas" },
 ];
 
 const ROOT: CatalogNode = { id: "root", label: "Catálogo", children: CATALOG_TREE };
@@ -341,10 +342,15 @@ function whatsappHref(labels: string[]) {
 ============================================================ */
 export default function SelectorLiturgico({
   embedded = false,
+  slugsExistentes = [],
 }: {
   /** true cuando se usa flotando sobre otra imagen (ej. el hero del home)
    * en vez de como página completa propia. */
   embedded?: boolean;
+  /** Slugs de productos que ya existen en la base de datos real. Se usa
+   * para decidir si una hoja del árbol lleva a su ficha real o, si el
+   * producto todavía no fue creado en el Admin, a "consultar por WhatsApp". */
+  slugsExistentes?: string[];
 } = {}) {
   const router = useRouter();
   const [screen, setScreen] = useState<Screen>("landing");
@@ -388,7 +394,7 @@ export default function SelectorLiturgico({
         setPath((p) => [...p, node]);
         return;
       }
-      if (node.productSlug) {
+      if (node.productSlug && slugsExistentes.includes(node.productSlug)) {
         router.push(`/producto/${node.productSlug}`);
         return;
       }

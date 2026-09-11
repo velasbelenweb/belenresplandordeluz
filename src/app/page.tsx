@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categorias, getDestacados } from "@/lib/products";
+import { categorias, getDestacados, getAllSlugs } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 import CinematicReveal from "@/components/CinematicReveal";
 import SelectorLiturgico from "@/components/SelectorLiturgico";
@@ -25,6 +25,7 @@ const articulosBlog = [
 
 export default async function HomePage() {
   const destacados = await getDestacados();
+  const slugsExistentes = await getAllSlugs();
 
   return (
     <>
@@ -44,7 +45,7 @@ export default async function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-16 md:px-8">
           <CinematicReveal variant="fade-up" delay={250}>
-            <SelectorLiturgico embedded />
+            <SelectorLiturgico embedded slugsExistentes={slugsExistentes} />
           </CinematicReveal>
         </div>
       </section>

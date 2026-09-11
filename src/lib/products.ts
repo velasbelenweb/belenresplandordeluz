@@ -82,6 +82,14 @@ export async function getDestacados(): Promise<Product[]> {
   });
 }
 
+// Usado por el selector de catálogo (SelectorLiturgico) para saber, sin
+// tener que consultar producto por producto, cuáles de las ~200 referencias
+// del árbol ya fueron cargadas como producto real desde el panel Admin.
+export async function getAllSlugs(): Promise<string[]> {
+  const productos = await prisma.product.findMany({ select: { slug: true } });
+  return productos.map((p) => p.slug);
+}
+
 export function formatCOP(valor: number) {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
