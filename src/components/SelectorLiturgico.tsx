@@ -324,7 +324,13 @@ function whatsappHref(labels: string[]) {
 /* ============================================================
    COMPONENTE PRINCIPAL
 ============================================================ */
-export default function SelectorLiturgico() {
+export default function SelectorLiturgico({
+  embedded = false,
+}: {
+  /** true cuando se usa flotando sobre otra imagen (ej. el hero del home)
+   * en vez de como página completa propia. */
+  embedded?: boolean;
+} = {}) {
   const router = useRouter();
   const [screen, setScreen] = useState<Screen>("landing");
   const [path, setPath] = useState<CatalogNode[]>([ROOT]);
@@ -399,7 +405,7 @@ export default function SelectorLiturgico() {
     screen === "result" ? current.children?.filter((c) => c.id !== selection?.id) ?? [] : [];
 
   return (
-    <div className="slv-root">
+    <div className={`slv-root ${embedded ? "slv-embedded" : ""}`}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap');
 
@@ -524,6 +530,27 @@ export default function SelectorLiturgico() {
           font-size: 0.85rem; transition: border-color 200ms ease;
         }
         .slv-history-item:hover { border-color: var(--gold); }
+        .slv-shell { font-family: 'Work Sans', sans-serif; }
+
+        /* Modo embebido: sin fondo propio ni altura de pantalla completa,
+           para flotar como tarjeta sobre la foto del hero del home. */
+        .slv-embedded {
+          background: transparent;
+          min-height: 0;
+          width: 100%;
+        }
+        .slv-embedded .slv-shell {
+          max-width: 460px;
+          margin: 0 auto;
+          background: rgba(20, 16, 13, 0.62);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(237, 227, 211, 0.14);
+          border-radius: 24px;
+          padding: 30px 24px 26px;
+          box-shadow: 0 24px 60px -20px rgba(0,0,0,0.65);
+        }
+        .slv-embedded .slv-h1 { font-size: 2rem; }
       `}</style>
 
       <div className="slv-shell">

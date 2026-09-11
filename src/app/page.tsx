@@ -2,6 +2,7 @@ import Link from "next/link";
 import { categorias, getDestacados } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 import CinematicReveal from "@/components/CinematicReveal";
+import SelectorLiturgico from "@/components/SelectorLiturgico";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +28,13 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero cinematico: Ken Burns + barras estilo cine + texto escalonado */}
-      <section className="relative flex min-h-[560px] items-center overflow-hidden bg-ink">
+      {/* Hero cinematico: Ken Burns + barras estilo cine + selector litúrgico embebido */}
+      <section className="relative flex min-h-[640px] items-center overflow-hidden bg-ink">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/hero-velas.jpg"
-          alt="Velas encendidas"
-          className="absolute inset-0 h-full w-full animate-kenburns object-cover opacity-70"
+          src="/hero-altar.jpg"
+          alt="Altar con velas encendidas"
+          className="absolute inset-0 h-full w-full animate-kenburns object-cover opacity-80"
         />
         <div className="hero-vignette absolute inset-0" />
 
@@ -41,24 +42,9 @@ export default async function HomePage() {
         <div className="letterbox-bar top-0 animate-letterbox-in" />
         <div className="letterbox-bar bottom-0 animate-letterbox-in" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-24 md:px-8">
-          <CinematicReveal variant="fade-up" delay={200}>
-            <h1 className="font-display text-4xl font-bold text-white md:text-6xl">
-              Velas Aromatizadas
-            </h1>
-          </CinematicReveal>
-          <CinematicReveal variant="fade-up" delay={450}>
-            <p className="mt-4 max-w-md border-t border-white/40 pt-4 text-white/90">
-              Ambiente sus espacios con las fragancias mas exclusivas
-            </p>
-          </CinematicReveal>
-          <CinematicReveal variant="fade-up" delay={700}>
-            <Link
-              href="/catalogo"
-              className="btn-pill mt-8 border-white text-white hover:bg-white hover:text-ink"
-            >
-              Comprar Ahora
-            </Link>
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-16 md:px-8">
+          <CinematicReveal variant="fade-up" delay={250}>
+            <SelectorLiturgico embedded />
           </CinematicReveal>
         </div>
       </section>
