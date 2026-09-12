@@ -55,6 +55,7 @@ const productos = [
       "Veladora tradicional de parafina, disponible en blanco y en 9 colores más. Ideal para novenas, devociones diarias y uso litúrgico.",
     precioBase: 1100,
     imagen: "/productos/veladora-no-1.jpg",
+    imagenSecundaria: "/productos/veladora-no-1-colores.jpg",
     categoriaSlug: "velas-iluminacion",
     destacado: true,
     variantes: [

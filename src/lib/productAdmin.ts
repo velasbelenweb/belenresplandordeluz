@@ -13,6 +13,7 @@ export type ProductoInput = {
   descripcion: string;
   precioBase: number;
   imagen: string;
+  imagenSecundaria?: string;
   categoriaSlug: string;
   destacado: boolean;
   variantes: VarianteInput[];
@@ -42,6 +43,7 @@ export async function crearProducto(input: ProductoInput) {
       descripcion: input.descripcion,
       precioBase: input.precioBase,
       imagen: input.imagen,
+      imagenSecundaria: input.imagenSecundaria || null,
       categoriaSlug: input.categoriaSlug,
       destacado: input.destacado,
       variantes: {
@@ -78,6 +80,7 @@ export async function actualizarProducto(id: string, input: ProductoInput) {
       descripcion: input.descripcion,
       precioBase: input.precioBase,
       imagen: input.imagen,
+      imagenSecundaria: input.imagenSecundaria || null,
       categoriaSlug: input.categoriaSlug,
       destacado: input.destacado,
       variantes: {

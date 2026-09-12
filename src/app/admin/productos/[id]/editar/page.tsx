@@ -30,6 +30,7 @@ export default async function EditarProductoPage({
             descripcion: producto.descripcion,
             precioBase: producto.precioBase,
             imagen: producto.imagen,
+            imagenSecundaria: producto.imagenSecundaria ?? "",
             categoriaSlug: producto.categoriaSlug,
             destacado: producto.destacado,
             variantes: producto.variantes.map((v) => ({

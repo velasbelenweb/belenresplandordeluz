@@ -20,6 +20,7 @@ model Product {
   descripcion   String
   precioBase    Int // COP, sin decimales
   imagen        String // URL http(s) o data URL (imagen subida desde el admin)
+  imagenSecundaria String? // opcional: ej. una foto mostrando variantes de color
   categoriaSlug String
   destacado     Boolean           @default(false)
   createdAt     DateTime          @default(now())

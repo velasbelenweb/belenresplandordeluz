@@ -11,6 +11,7 @@ export type ProductoFormValues = {
   descripcion: string;
   precioBase: number;
   imagen: string;
+  imagenSecundaria: string;
   categoriaSlug: string;
   destacado: boolean;
   variantes: Variante[];
@@ -26,10 +27,14 @@ export default function ProductoForm({
   textoBoton?: string;
 }) {
   const [imagen, setImagen] = useState(valoresIniciales?.imagen ?? "");
+  const [imagenSecundaria, setImagenSecundaria] = useState(
+    valoresIniciales?.imagenSecundaria ?? ""
+  );
   const [variantes, setVariantes] = useState<Variante[]>(
     valoresIniciales?.variantes?.length ? valoresIniciales.variantes : []
   );
   const [subiendo, setSubiendo] = useState(false);
+  const [subiendoSecundaria, setSubiendoSecundaria] = useState(false);
 
   function handleArchivo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -41,6 +46,19 @@ export default function ProductoForm({
       setSubiendo(false);
     };
     reader.onerror = () => setSubiendo(false);
+    reader.readAsDataURL(file);
+  }
+
+  function handleArchivoSecundaria(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSubiendoSecundaria(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagenSecundaria(String(reader.result));
+      setSubiendoSecundaria(false);
+    };
+    reader.onerror = () => setSubiendoSecundaria(false);
     reader.readAsDataURL(file);
   }
 
@@ -65,6 +83,7 @@ export default function ProductoForm({
   return (
     <form action={action} className="grid gap-6">
       <input type="hidden" name="imagen" value={imagen} />
+      <input type="hidden" name="imagenSecundaria" value={imagenSecundaria} />
       <input
         type="hidden"
         name="variantesJson"
@@ -166,6 +185,33 @@ export default function ProductoForm({
           <img
             src={imagen}
             alt="Vista previa"
+            className="mt-2 h-40 w-40 rounded-xl border border-ink/15 object-cover"
+          />
+        )}
+      </div>
+
+      <div className="grid gap-2">
+        <p className="text-sm text-ink/70">
+          Segunda imagen (opcional — ej. una foto mostrando los colores disponibles)
+        </p>
+        <input type="file" accept="image/*" onChange={handleArchivoSecundaria} />
+        <p className="text-xs text-ink/40">
+          O pega la URL de una imagen ya publicada en internet:
+        </p>
+        <input
+          placeholder="https://..."
+          value={imagenSecundaria.startsWith("data:") ? "" : imagenSecundaria}
+          onChange={(e) => setImagenSecundaria(e.target.value)}
+          className="rounded-xl border border-ink/30 px-4 py-2 text-ink outline-none"
+        />
+        {subiendoSecundaria && (
+          <p className="text-xs text-ink/40">Procesando imagen…</p>
+        )}
+        {imagenSecundaria && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imagenSecundaria}
+            alt="Vista previa segunda imagen"
             className="mt-2 h-40 w-40 rounded-xl border border-ink/15 object-cover"
           />
         )}

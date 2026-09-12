@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getProductBySlug, formatCOP } from "@/lib/products";
-import VariantSelector from "@/components/VariantSelector";
+import AddToCartButton from "@/components/AddToCartButton";
+import MultiVariantSelector from "@/components/MultiVariantSelector";
+import ProductGallery from "@/components/ProductGallery";
 import CinematicReveal from "@/components/CinematicReveal";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +15,14 @@ export default async function ProductoPage({
   const product = await getProductBySlug(params.slug);
   if (!product) return notFound();
 
+  const imagenes = [product.imagen, product.imagenSecundaria].filter(
+    (src): src is string => Boolean(src)
+  );
+
   return (
     <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2 md:px-8">
       <CinematicReveal variant="wipe-right">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={product.imagen}
-          alt={product.nombre}
-          className="aspect-square w-full rounded-2xl object-cover"
-        />
+        <ProductGallery imagenes={imagenes} alt={product.nombre} />
       </CinematicReveal>
 
       <CinematicReveal variant="fade-up" delay={150}>
@@ -40,7 +41,11 @@ export default async function ProductoPage({
           <p className="text-ink/70">{product.descripcion}</p>
 
           <div className="mt-2">
-            <VariantSelector product={product} />
+            {product.variantes.length > 0 ? (
+              <MultiVariantSelector product={product} />
+            ) : (
+              <AddToCartButton product={product} className="w-full sm:w-auto" />
+            )}
           </div>
         </div>
       </CinematicReveal>

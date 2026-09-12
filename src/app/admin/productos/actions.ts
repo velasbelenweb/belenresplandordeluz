@@ -24,6 +24,7 @@ function leerProductoDeFormData(formData: FormData): ProductoInput {
     descripcion: String(formData.get("descripcion") ?? "").trim(),
     precioBase: Number(formData.get("precioBase") ?? 0),
     imagen: String(formData.get("imagen") ?? "").trim(),
+    imagenSecundaria: String(formData.get("imagenSecundaria") ?? "").trim() || undefined,
     categoriaSlug: String(formData.get("categoriaSlug") ?? ""),
     destacado: formData.get("destacado") === "on",
     variantes: variantes
