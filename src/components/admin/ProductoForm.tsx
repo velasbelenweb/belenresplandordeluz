@@ -30,6 +30,7 @@ export default function ProductoForm({
   const [imagenSecundaria, setImagenSecundaria] = useState(
     valoresIniciales?.imagenSecundaria ?? ""
   );
+  const [precioBase, setPrecioBase] = useState(valoresIniciales?.precioBase ?? 0);
   const [variantes, setVariantes] = useState<Variante[]>(
     valoresIniciales?.variantes?.length ? valoresIniciales.variantes : []
   );
@@ -63,7 +64,11 @@ export default function ProductoForm({
   }
 
   function agregarVariante() {
-    setVariantes((v) => [...v, { nombre: "", precio: 0 }]);
+    setVariantes((v) => [...v, { nombre: "", precio: precioBase || 0 }]);
+  }
+
+  function igualarPrecioVariantes() {
+    setVariantes((v) => v.map((item) => ({ ...item, precio: precioBase })));
   }
 
   function actualizarVariante(idx: number, campo: keyof Variante, valor: string) {
@@ -129,12 +134,14 @@ export default function ProductoForm({
             name="precioBase"
             min={0}
             required
-            defaultValue={valoresIniciales?.precioBase}
+            value={precioBase || ""}
+            onChange={(e) => setPrecioBase(Number(e.target.value) || 0)}
             className="rounded-xl border border-ink/30 px-4 py-2 text-ink outline-none"
           />
           <span className="text-xs text-ink/40">
             Si el producto tiene variantes, este precio se usa como referencia
-            en las tarjetas; cada variante puede tener su propio precio abajo.
+            en las tarjetas; cada variante puede tener su propio precio abajo
+            (usa el botón &quot;Igualar precios&quot; si todas deben costar lo mismo).
           </span>
         </label>
         <label className="grid gap-1 text-sm text-ink/70">
@@ -222,13 +229,24 @@ export default function ProductoForm({
           <p className="font-display font-semibold text-ink">
             Variantes (opcional)
           </p>
-          <button
-            type="button"
-            onClick={agregarVariante}
-            className="btn-pill border-ink/40 px-4 py-1.5 text-sm text-ink/70 hover:border-ink hover:text-ink"
-          >
-            + Agregar variante
-          </button>
+          <div className="flex gap-2">
+            {variantes.length > 0 && (
+              <button
+                type="button"
+                onClick={igualarPrecioVariantes}
+                className="btn-pill border-ink/40 px-4 py-1.5 text-sm text-ink/70 hover:border-ink hover:text-ink"
+              >
+                Igualar precios al base
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={agregarVariante}
+              className="btn-pill border-ink/40 px-4 py-1.5 text-sm text-ink/70 hover:border-ink hover:text-ink"
+            >
+              + Agregar variante
+            </button>
+          </div>
         </div>
         <p className="text-xs text-ink/40">
           Úsalas para tamaños, colores o aromas con precios distintos. Si no

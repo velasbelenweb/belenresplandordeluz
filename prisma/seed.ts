@@ -2,7 +2,8 @@
 // el sitio original de Shopify). Se ejecuta con: npx prisma db seed
 //
 // Es seguro correrlo varias veces: usa upsert por slug, así que no duplica
-// productos si ya existen.
+// productos si ya existen — y ahora también actualiza sus datos (precio,
+// imágenes, variantes) si cambiaron aquí.
 
 import { PrismaClient } from "@prisma/client";
 
@@ -127,7 +128,10 @@ async function main() {
     const { variantes, ...datos } = p;
     await prisma.product.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: {
+        ...datos,
+        variantes: { deleteMany: {}, create: variantes },
+      },
       create: {
         ...datos,
         variantes: { create: variantes },

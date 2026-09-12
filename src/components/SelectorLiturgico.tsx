@@ -509,10 +509,10 @@ export default function SelectorLiturgico({
         .slv-option {
           width: 100%; display:flex; align-items:center; justify-content: space-between; gap: 14px;
           background: var(--panel); border: 1px solid var(--line);
-          border-radius: 14px; padding: 16px 16px; margin-bottom: 10px;
-          cursor: pointer; text-align: left; color: var(--ink); font-size: 1rem;
+          border-radius: 12px; padding: 11px 16px; margin-bottom: 8px;
+          cursor: pointer; text-align: left; color: var(--ink); font-size: 0.95rem;
           transition: border-color 200ms ease, background 200ms ease, transform 150ms ease;
-          min-height: 56px;
+          min-height: 44px;
         }
         .slv-option:hover { border-color: var(--gold); background: var(--panel-2); transform: translateY(-1px); }
         .slv-option:active { transform: translateY(0); }
