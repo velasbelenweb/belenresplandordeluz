@@ -58,9 +58,35 @@ const CIRIO_OCACION = ["Bautizo", "Primera comunión", "Confirmación"];
 // -- Generadores: una función por línea de producto (Veladoras/Velones/
 // Cirios/Velas), cada una repitiendo la misma estructura para las 5 líneas.
 
+// Diseños de la línea "Especial" que todavía no existen como producto real
+// (sin precio ni foto propia) — llevan a "consultar por WhatsApp".
+const ESPECIAL_DISENOS = [
+  "Santa Marta",
+  "Oración a San Alejo",
+  "Las 7 Potencias",
+  "Oración a Juan del Dinero",
+  "Prosperidad",
+  "Don Juan del Volteo",
+  "Oración del Pensamiento",
+  "Justo Juez",
+  "Desespero",
+  "San Marcos de León",
+  "Destrancadera",
+  "Las Tres Potencias",
+  "Virgen de Guadalupe",
+  "Virgen del Carmen",
+  "San Miguel Arcángel",
+  "Oración el Dominio",
+  "Señor de Monserrate",
+  "San Pancracio",
+  "Cera de Abejas",
+  "Arcángel San Gabriel",
+];
+
 function veladorasPorLinea(): CatalogNode[] {
   return LINEAS.map((linea) => {
     const ls = slugify(linea);
+    const especialSlug = `veladora-no-1-especial-${ls}`;
     return {
       id: `veladora-${ls}`,
       label: linea,
@@ -70,6 +96,28 @@ function veladorasPorLinea(): CatalogNode[] {
           label: "Veladora No. 1",
           productSlug: `veladora-no-1-${ls}`,
           previewImage: "/productos/veladora-no-1.jpg",
+        },
+        {
+          id: `veladora-${ls}-especial`,
+          label: "Especial",
+          children: [
+            {
+              id: `veladora-${ls}-especial-oro`,
+              label: "Oro",
+              productSlug: especialSlug,
+              previewImage: "/productos/veladora-especial-oro.jpg",
+            },
+            {
+              id: `veladora-${ls}-especial-plata`,
+              label: "Plata",
+              productSlug: especialSlug,
+              previewImage: "/productos/veladora-especial-plata.jpg",
+            },
+            ...ESPECIAL_DISENOS.map((d) => ({
+              id: `veladora-${ls}-especial-${slugify(d)}`,
+              label: d,
+            })),
+          ],
         },
       ],
     };

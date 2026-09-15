@@ -120,24 +120,25 @@ const productos = [
       { nombre: "Negro", precio: 1296 },
     ],
   },
-  // -- Referencias 00002: presentación "especial" (colores Oro, Plata,
-  // Santa Martha en vez de la paleta completa). Creadas sin foto real
-  // todavía — usan un marcador temporal hasta que se suban las fotos
-  // reales desde el panel Admin (ver notas de dimensiones recomendadas).
+  // -- Referencias 00002: presentación "especial". Oro y Plata ya tienen
+  // foto real y son las únicas variantes vendibles por ahora. El resto de
+  // diseños "Especial" (Santa Marta, San Pancracio, Desespero, etc.) viven
+  // solo en el árbol del selector litúrgico y mandan a WhatsApp — no son
+  // variantes de este producto porque todavía no tienen precio ni foto.
   {
     slug: "veladora-no-1-especial-san-rafael",
     nombre: "Veladora No. 1 Especial – San Rafael",
     referencia: "BS-00002",
     descripcion:
-      "Veladora No. 1 Especial de parafina, línea San Rafael. 4 cm de alto x 4.3 cm de diámetro, ~54 g. Colores Oro, Plata y Santa Martha. Presentación por unidad o por paquete de 12.",
+      "Veladora No. 1 Especial de parafina, línea San Rafael. 4 cm de alto x 4.3 cm de diámetro, ~54 g. Colores Oro y Plata. Presentación por unidad o por paquete de 12.",
     precioBase: 1645,
-    imagen: "/productos/sin-imagen.jpg",
+    imagen: "/productos/veladora-especial-oro.jpg",
+    imagenSecundaria: "/productos/veladora-especial-plata.jpg",
     categoriaSlug: "velas-iluminacion",
     destacado: false,
     variantes: [
       { nombre: "Oro", precio: 1645 },
       { nombre: "Plata", precio: 1645 },
-      { nombre: "Santa Martha", precio: 1645 },
     ],
   },
   {
@@ -145,15 +146,15 @@ const productos = [
     nombre: "Veladora No. 1 Especial – Cinco Estrellas",
     referencia: "BE-00002",
     descripcion:
-      "Veladora No. 1 Especial de parafina, línea Cinco Estrellas. 4 cm de alto x 4.3 cm de diámetro, ~54 g. Colores Oro, Plata y Santa Martha. Presentación por unidad o por paquete de 12.",
+      "Veladora No. 1 Especial de parafina, línea Cinco Estrellas. 4 cm de alto x 4.3 cm de diámetro, ~54 g. Colores Oro y Plata. Presentación por unidad o por paquete de 12.",
     precioBase: 1667,
-    imagen: "/productos/sin-imagen.jpg",
+    imagen: "/productos/veladora-especial-oro.jpg",
+    imagenSecundaria: "/productos/veladora-especial-plata.jpg",
     categoriaSlug: "velas-iluminacion",
     destacado: false,
     variantes: [
       { nombre: "Oro", precio: 1667 },
       { nombre: "Plata", precio: 1667 },
-      { nombre: "Santa Martha", precio: 1667 },
     ],
   },
   {
@@ -161,15 +162,15 @@ const productos = [
     nombre: "Veladora No. 1 Especial – Celeste",
     referencia: "BC-00002",
     descripcion:
-      "Veladora No. 1 Especial de parafina, línea Celeste. 3.9 cm de alto x 4.2 cm de diámetro, ~53 g. Colores Oro, Plata y Santa Martha. Presentación por unidad o por paquete de 12.",
+      "Veladora No. 1 Especial de parafina, línea Celeste. 3.9 cm de alto x 4.2 cm de diámetro, ~53 g. Colores Oro y Plata. Presentación por unidad o por paquete de 12.",
     precioBase: 1296,
-    imagen: "/productos/sin-imagen.jpg",
+    imagen: "/productos/veladora-especial-oro.jpg",
+    imagenSecundaria: "/productos/veladora-especial-plata.jpg",
     categoriaSlug: "velas-iluminacion",
     destacado: false,
     variantes: [
       { nombre: "Oro", precio: 1296 },
       { nombre: "Plata", precio: 1296 },
-      { nombre: "Santa Martha", precio: 1296 },
     ],
   },
   {
