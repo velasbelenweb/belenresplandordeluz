@@ -124,80 +124,59 @@ function veladorasPorLinea(): CatalogNode[] {
   });
 }
 
-function velonesPorLinea(): CatalogNode[] {
-  return LINEAS.map((linea) => {
-    const ls = slugify(linea);
-    return {
-      id: `velon-${ls}`,
-      label: linea,
-      children: VELON_REFS.map((n) => ({
-        id: `velon-${ls}-${n}`,
-        label: `Velón No. ${n}`,
-        productSlug: `velon-no-${slugify(n)}-${ls}`,
-      })),
-    };
-  });
+function velonesFlat(): CatalogNode[] {
+  return VELON_REFS.map((n) => ({
+    id: `velon-${n}`,
+    label: `Velón No. ${n}`,
+    productSlug: `velon-no-${slugify(n)}`,
+  }));
 }
 
-function ciriosPorLinea(): CatalogNode[] {
-  return LINEAS.map((linea) => {
-    const ls = slugify(linea);
-    return {
-      id: `cirio-${ls}`,
-      label: linea,
-      children: [
-        {
-          id: `cirio-${ls}-tradicionales`,
-          label: "Tradicionales",
-          children: CIRIO_TRADICIONALES.map((t) => ({
-            id: `cirio-${ls}-trad-${slugify(t)}`,
-            label: t,
-            productSlug: `cirio-${slugify(t)}-${ls}`,
-          })),
-        },
-        {
-          id: `cirio-${ls}-especiales`,
-          label: "Especiales",
-          children: CIRIO_ESPECIALES.map((t) => ({
-            id: `cirio-${ls}-esp-${slugify(t)}`,
-            label: t,
-            productSlug: `cirio-${slugify(t)}-${ls}`,
-          })),
-        },
-        {
-          id: `cirio-${ls}-ocacion`,
-          label: "Ocación",
-          children: CIRIO_OCACION.map((t) => ({
-            id: `cirio-${ls}-oca-${slugify(t)}`,
-            label: t,
-            productSlug: `cirio-${slugify(t)}-${ls}`,
-          })),
-        },
-      ],
-    };
-  });
-}
-
-function velasPorLinea(): CatalogNode[] {
-  return LINEAS.map((linea) => {
-    const ls = slugify(linea);
-    return {
-      id: `vela-${ls}`,
-      label: linea,
-      children: VELA_TIPOS.map((t) => ({
-        id: `vela-${ls}-${slugify(t)}`,
+function ciriosFlat(): CatalogNode[] {
+  return [
+    {
+      id: "cirio-tradicionales",
+      label: "Tradicionales",
+      children: CIRIO_TRADICIONALES.map((t) => ({
+        id: `cirio-trad-${slugify(t)}`,
         label: t,
-        productSlug: `vela-${slugify(t)}-${ls}`,
+        productSlug: `cirio-${slugify(t)}`,
       })),
-    };
-  });
+    },
+    {
+      id: "cirio-especiales",
+      label: "Especiales",
+      children: CIRIO_ESPECIALES.map((t) => ({
+        id: `cirio-esp-${slugify(t)}`,
+        label: t,
+        productSlug: `cirio-${slugify(t)}`,
+      })),
+    },
+    {
+      id: "cirio-ocacion",
+      label: "Ocación",
+      children: CIRIO_OCACION.map((t) => ({
+        id: `cirio-oca-${slugify(t)}`,
+        label: t,
+        productSlug: `cirio-${slugify(t)}`,
+      })),
+    },
+  ];
+}
+
+function velasFlat(): CatalogNode[] {
+  return VELA_TIPOS.map((t) => ({
+    id: `vela-${slugify(t)}`,
+    label: t,
+    productSlug: `vela-${slugify(t)}`,
+  }));
 }
 
 const CATALOG_TREE: CatalogNode[] = [
   { id: "veladoras", label: "1. Veladoras", children: veladorasPorLinea() },
-  { id: "velones", label: "2. Velones", children: velonesPorLinea() },
-  { id: "cirios", label: "3. Cirios", children: ciriosPorLinea() },
-  { id: "velas", label: "4. Velas", children: velasPorLinea() },
+  { id: "velones", label: "2. Velones", children: velonesFlat() },
+  { id: "cirios", label: "3. Cirios", children: ciriosFlat() },
+  { id: "velas", label: "4. Velas", children: velasFlat() },
   {
     id: "desahumerios",
     label: "5. Desahumerios",
