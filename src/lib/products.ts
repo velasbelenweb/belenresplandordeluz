@@ -43,51 +43,87 @@ export function getCategoriaByPath(slug: string) {
 }
 
 export async function getProductos(): Promise<Product[]> {
-  return prisma.product.findMany({
-    include: { variantes: true },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.product.findMany({
+      include: { variantes: true },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("[getProductos] No se pudo consultar la base de datos:", error);
+    return [];
+  }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  return prisma.product.findUnique({
-    where: { slug },
-    include: { variantes: true },
-  });
+  try {
+    return await prisma.product.findUnique({
+      where: { slug },
+      include: { variantes: true },
+    });
+  } catch (error) {
+    console.error("[getProductBySlug] No se pudo consultar la base de datos:", error);
+    return null;
+  }
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  return prisma.product.findUnique({
-    where: { id },
-    include: { variantes: true },
-  });
+  try {
+    return await prisma.product.findUnique({
+      where: { id },
+      include: { variantes: true },
+    });
+  } catch (error) {
+    console.error("[getProductById] No se pudo consultar la base de datos:", error);
+    return null;
+  }
 }
 
 export async function getProductosByCategoria(
   categoriaSlug: string
 ): Promise<Product[]> {
-  return prisma.product.findMany({
-    where: { categoriaSlug },
-    include: { variantes: true },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.product.findMany({
+      where: { categoriaSlug },
+      include: { variantes: true },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error(
+      "[getProductosByCategoria] No se pudo consultar la base de datos:",
+      error
+    );
+    return [];
+  }
 }
 
 export async function getDestacados(): Promise<Product[]> {
-  return prisma.product.findMany({
-    where: { destacado: true },
-    include: { variantes: true },
-    orderBy: { createdAt: "desc" },
-    take: 8,
-  });
+  try {
+    return await prisma.product.findMany({
+      where: { destacado: true },
+      include: { variantes: true },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    });
+  } catch (error) {
+    // Si la base de datos no responde (ej. expiró la base gratuita de Render,
+    // o hay un problema temporal de conexión), no tumbamos toda la página de
+    // inicio: mostramos la sección de destacados vacía en vez de un 500.
+    console.error("[getDestacados] No se pudo consultar la base de datos:", error);
+    return [];
+  }
 }
 
 // Usado por el selector de catálogo (SelectorLiturgico) para saber, sin
 // tener que consultar producto por producto, cuáles de las ~200 referencias
 // del árbol ya fueron cargadas como producto real desde el panel Admin.
 export async function getAllSlugs(): Promise<string[]> {
-  const productos = await prisma.product.findMany({ select: { slug: true } });
-  return productos.map((p) => p.slug);
+  try {
+    const productos = await prisma.product.findMany({ select: { slug: true } });
+    return productos.map((p) => p.slug);
+  } catch (error) {
+    console.error("[getAllSlugs] No se pudo consultar la base de datos:", error);
+    return [];
+  }
 }
 
 export function formatCOP(valor: number) {

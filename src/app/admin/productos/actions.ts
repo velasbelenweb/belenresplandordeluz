@@ -40,10 +40,11 @@ export async function crearProductoAction(formData: FormData) {
     throw new Error("Faltan campos obligatorios del producto.");
   }
 
-  await crearProducto(input);
+  const creado = await crearProducto(input);
   revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
   revalidatePath("/");
+  revalidatePath(`/producto/${creado.slug}`);
   redirect("/admin/productos");
 }
 
@@ -54,16 +55,18 @@ export async function actualizarProductoAction(id: string, formData: FormData) {
     throw new Error("Faltan campos obligatorios del producto.");
   }
 
-  await actualizarProducto(id, input);
+  const actualizado = await actualizarProducto(id, input);
   revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
   revalidatePath("/");
+  revalidatePath(`/producto/${actualizado.slug}`);
   redirect("/admin/productos");
 }
 
 export async function eliminarProductoAction(id: string) {
-  await eliminarProducto(id);
+  const eliminado = await eliminarProducto(id);
   revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
   revalidatePath("/");
+  revalidatePath(`/producto/${eliminado.slug}`);
 }

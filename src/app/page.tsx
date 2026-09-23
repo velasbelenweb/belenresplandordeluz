@@ -4,7 +4,11 @@ import ProductCard from "@/components/ProductCard";
 import CinematicReveal from "@/components/CinematicReveal";
 import SelectorLiturgico from "@/components/SelectorLiturgico";
 
-export const dynamic = "force-dynamic";
+// Antes: force-dynamic (consultaba la base de datos en cada visita).
+// Ahora: la página se cachea y se regenera como máximo cada 5 minutos, así
+// casi todas las visitas se sirven al instante sin tocar la base de datos
+// — más rápido para el usuario y menos carga sobre el plan gratis de Render.
+export const revalidate = 300;
 
 const articulosBlog = [
   {
@@ -35,13 +39,13 @@ export default async function HomePage() {
         <img
           src="/hero-altar.jpg"
           alt="Altar con velas encendidas"
-          className="absolute inset-0 h-full w-full animate-kenburns object-cover opacity-80"
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
         />
         <div className="hero-vignette absolute inset-0" />
 
-        {/* Barras de letterbox */}
-        <div className="letterbox-bar top-0 animate-letterbox-in" />
-        <div className="letterbox-bar bottom-0 animate-letterbox-in" />
+        {/* Barras de letterbox (ahora estáticas, sin animación de entrada) */}
+        <div className="letterbox-bar top-0" />
+        <div className="letterbox-bar bottom-0" />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-16 md:px-8">
           <CinematicReveal variant="fade-up" delay={250}>

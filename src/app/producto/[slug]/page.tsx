@@ -5,7 +5,9 @@ import MultiVariantSelector from "@/components/MultiVariantSelector";
 import ProductGallery from "@/components/ProductGallery";
 import CinematicReveal from "@/components/CinematicReveal";
 
-export const dynamic = "force-dynamic";
+// Igual que en la home: se cachea y se regenera cada 5 minutos en vez de
+// consultar la base de datos en cada visita.
+export const revalidate = 300;
 
 export default async function ProductoPage({
   params,

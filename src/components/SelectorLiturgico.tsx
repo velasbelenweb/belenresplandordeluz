@@ -448,8 +448,6 @@ export default function SelectorLiturgico({
   return (
     <div className={`slv-root ${embedded ? "slv-embedded" : ""}`}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap');
-
         .slv-root {
           --bg: #14100D;
           --panel: #1C1712;
@@ -588,9 +586,10 @@ export default function SelectorLiturgico({
         .slv-embedded .slv-shell {
           max-width: 460px;
           margin: 0 auto;
-          background: rgba(20, 16, 13, 0.62);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          /* Antes tenía backdrop-filter: blur(10px), pesado para el GPU en
+             equipos modestos/móviles. Se reemplaza por un fondo más opaco
+             para lograr un efecto similar sin el costo de rendimiento. */
+          background: rgba(18, 14, 11, 0.86);
           border: 1px solid rgba(237, 227, 211, 0.14);
           border-radius: 24px;
           padding: 30px 24px 26px;
